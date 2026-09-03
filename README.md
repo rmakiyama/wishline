@@ -2,8 +2,6 @@
 
 A mobile app for Android and iOS built with Kotlin Multiplatform and Compose Multiplatform.
 
-Generated from [app-skeleton-cmp](https://github.com/rmakiyama/app-skeleton-cmp).
-
 ## Requirements
 
 - Java 21 (Temurin). The version is pinned in `mise.toml`; run `mise install` to set it up
