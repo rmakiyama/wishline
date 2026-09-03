@@ -24,7 +24,7 @@ iOS app: build `app-ios/app-ios.xcodeproj` with Xcode (the build phase compiles 
 
 ## Adding a Feature Module
 
-1. Create `feature/<name>/`. `build.gradle.kts` only needs `id("skeleton.feature")`
+1. Create `feature/<name>/`. `build.gradle.kts` only needs `id("wishline.feature")`
 2. Add `include(":feature:<name>")` to `settings.gradle.kts`
 3. Add a Route to `:core:navigation` and register it in `NavKeyConfiguration` so the back stack can be restored
 4. Expose a navigation entry extension function from the feature module

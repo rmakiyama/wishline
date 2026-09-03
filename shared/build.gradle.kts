@@ -1,9 +1,9 @@
 plugins {
-    id("skeleton.kotlin.multiplatform")
-    id("skeleton.kotlin.multiplatform.ios")
-    id("skeleton.compose.multiplatform")
-    id("skeleton.metro")
-    id("skeleton.ios.framework")
+    id("wishline.kotlin.multiplatform")
+    id("wishline.kotlin.multiplatform.ios")
+    id("wishline.compose.multiplatform")
+    id("wishline.metro")
+    id("wishline.ios.framework")
 }
 
 kotlin {

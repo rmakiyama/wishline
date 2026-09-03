@@ -1,7 +1,7 @@
 import com.android.build.api.dsl.ApplicationExtension
-import com.rmakiyama.skeleton.getDefaultNamespace
-import com.rmakiyama.skeleton.libs
-import com.rmakiyama.skeleton.warningsAsErrors
+import com.rmakiyama.wishline.getDefaultNamespace
+import com.rmakiyama.wishline.libs
+import com.rmakiyama.wishline.warningsAsErrors
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project

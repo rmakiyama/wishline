@@ -1,4 +1,4 @@
-import com.rmakiyama.skeleton.libs
+import com.rmakiyama.wishline.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure

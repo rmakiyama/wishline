@@ -1,0 +1,35 @@
+package com.rmakiyama.wishline.di
+
+import com.rmakiyama.wishline.data.SQLDelightItemRepository
+import com.rmakiyama.wishline.data.db.DatabaseDriverFactory
+import com.rmakiyama.wishline.data.db.WishlineDatabase
+import com.rmakiyama.wishline.domain.ItemRepository
+import com.rmakiyama.wishline.usecase.GetItemsStream
+import com.rmakiyama.wishline.usecase.GetItemsStreamUseCase
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.SingleIn
+
+/**
+ * Platform-agnostic providers shared by the Android and iOS dependency graphs.
+ * Each platform graph supplies its own [DatabaseDriverFactory].
+ */
+interface SharedProviders {
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun provideWishlineDatabase(
+        driverFactory: DatabaseDriverFactory,
+    ): WishlineDatabase = WishlineDatabase(driverFactory.createDriver())
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun provideItemRepository(
+        impl: SQLDelightItemRepository,
+    ): ItemRepository = impl
+
+    @Provides
+    fun provideGetItemsStreamUseCase(
+        impl: GetItemsStream,
+    ): GetItemsStreamUseCase = impl
+}

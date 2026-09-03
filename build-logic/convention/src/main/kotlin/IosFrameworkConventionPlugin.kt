@@ -1,4 +1,4 @@
-import com.rmakiyama.skeleton.getDefaultNamespace
+import com.rmakiyama.wishline.getDefaultNamespace
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure

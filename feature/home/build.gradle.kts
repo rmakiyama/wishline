@@ -1,3 +1,3 @@
 plugins {
-    id("skeleton.feature")
+    id("wishline.feature")
 }

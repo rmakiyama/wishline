@@ -4,7 +4,7 @@ plugins {
     `kotlin-dsl`
 }
 
-group = "com.rmakiyama.skeleton.buildlogic"
+group = "com.rmakiyama.wishline.buildlogic"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -27,35 +27,35 @@ dependencies {
 gradlePlugin {
     plugins {
         register("androidApplication") {
-            id = "skeleton.android.application"
+            id = "wishline.android.application"
             implementationClass = "AndroidApplicationConventionPlugin"
         }
 register("kotlinMultiplatform") {
-            id = "skeleton.kotlin.multiplatform"
+            id = "wishline.kotlin.multiplatform"
             implementationClass = "KotlinMultiplatformConventionPlugin"
         }
         register("kotlinMultiplatformIos") {
-            id = "skeleton.kotlin.multiplatform.ios"
+            id = "wishline.kotlin.multiplatform.ios"
             implementationClass = "KotlinMultiplatformIosConventionPlugin"
         }
         register("composeMultiplatform") {
-            id = "skeleton.compose.multiplatform"
+            id = "wishline.compose.multiplatform"
             implementationClass = "ComposeMultiplatformConventionPlugin"
         }
         register("metro") {
-            id = "skeleton.metro"
+            id = "wishline.metro"
             implementationClass = "MetroConventionPlugin"
         }
         register("iosFramework") {
-            id = "skeleton.ios.framework"
+            id = "wishline.ios.framework"
             implementationClass = "IosFrameworkConventionPlugin"
         }
         register("feature") {
-            id = "skeleton.feature"
+            id = "wishline.feature"
             implementationClass = "FeatureConventionPlugin"
         }
         register("sqldelight") {
-            id = "skeleton.sqldelight"
+            id = "wishline.sqldelight"
             implementationClass = "SqlDelightConventionPlugin"
         }
     }

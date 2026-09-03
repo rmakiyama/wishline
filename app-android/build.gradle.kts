@@ -1,6 +1,6 @@
 plugins {
-    id("skeleton.android.application")
-    id("skeleton.metro")
+    id("wishline.android.application")
+    id("wishline.metro")
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
@@ -8,7 +8,7 @@ plugins {
 
 android {
     defaultConfig {
-        applicationId = "com.rmakiyama.skeleton"
+        applicationId = "com.rmakiyama.wishline"
         versionCode = 1
         versionName = "1.0"
     }

@@ -1,6 +1,6 @@
 plugins {
-    id("skeleton.kotlin.multiplatform")
-    id("skeleton.kotlin.multiplatform.ios")
+    id("wishline.kotlin.multiplatform")
+    id("wishline.kotlin.multiplatform.ios")
     alias(libs.plugins.kotlinSerialization)
 }
 

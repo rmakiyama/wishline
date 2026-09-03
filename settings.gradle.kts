@@ -1,4 +1,4 @@
-rootProject.name = "app-skeleton-cmp"
+rootProject.name = "wishline"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {

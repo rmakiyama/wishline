@@ -1,4 +1,4 @@
-# App Skeleton CMP
+# App Wishline CMP
 
 A template repository for mobile apps built with Kotlin Multiplatform and Compose Multiplatform.
 

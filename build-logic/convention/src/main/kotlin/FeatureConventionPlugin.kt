@@ -1,6 +1,6 @@
 import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
-import com.rmakiyama.skeleton.getDefaultNamespace
-import com.rmakiyama.skeleton.libs
+import com.rmakiyama.wishline.getDefaultNamespace
+import com.rmakiyama.wishline.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -12,10 +12,10 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 class FeatureConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-            pluginManager.apply("skeleton.kotlin.multiplatform")
-            pluginManager.apply("skeleton.kotlin.multiplatform.ios")
-            pluginManager.apply("skeleton.compose.multiplatform")
-            pluginManager.apply("skeleton.metro")
+            pluginManager.apply("wishline.kotlin.multiplatform")
+            pluginManager.apply("wishline.kotlin.multiplatform.ios")
+            pluginManager.apply("wishline.compose.multiplatform")
+            pluginManager.apply("wishline.metro")
             pluginManager.apply("dev.mokkery")
 
             extensions.configure<ComposeExtension> {

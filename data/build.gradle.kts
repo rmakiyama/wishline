@@ -1,14 +1,14 @@
 plugins {
-    id("skeleton.kotlin.multiplatform")
-    id("skeleton.kotlin.multiplatform.ios")
-    id("skeleton.metro")
-    id("skeleton.sqldelight")
+    id("wishline.kotlin.multiplatform")
+    id("wishline.kotlin.multiplatform.ios")
+    id("wishline.metro")
+    id("wishline.sqldelight")
 }
 
 sqldelight {
     databases {
-        create("SkeletonDatabase") {
-            packageName.set("com.rmakiyama.skeleton.data.db")
+        create("WishlineDatabase") {
+            packageName.set("com.rmakiyama.wishline.data.db")
         }
     }
 }
