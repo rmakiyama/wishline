@@ -1,20 +1,48 @@
-# App Wishline CMP
+# Wishline
 
-A template repository for mobile apps built with Kotlin Multiplatform and Compose Multiplatform.
+A mobile app for Android and iOS built with Kotlin Multiplatform and Compose Multiplatform.
 
-For a variant that keeps the UI native on each platform (Jetpack Compose on Android, SwiftUI on
-iOS), see [app-skeleton](https://github.com/rmakiyama/app-skeleton).
+Generated from [app-skeleton-cmp](https://github.com/rmakiyama/app-skeleton-cmp).
 
-## Setup
+## Requirements
 
-1. Use this template to create a new repository
-2. Clone the new repository
-3. Run the setup script:
-   ```bash
-   ./setup.sh --app-name "YourApp" --package "com.example.yourapp"
-   ```
-4. Open in Android Studio and sync Gradle
-5. Run `app-android` configuration (Android) or open `app-ios/app-ios.xcodeproj` in Xcode (iOS)
+- Java 21 (Temurin). The version is pinned in `mise.toml`; run `mise install` to set it up
+- Android SDK. Point Gradle to it via `ANDROID_HOME` or `local.properties`:
+  ```properties
+  sdk.dir=/path/to/Android/sdk
+  ```
+- Xcode (iOS only)
+
+## Build & Run
+
+### Android
+
+```bash
+./gradlew assembleDebug
+```
+
+Or open the project in Android Studio and run the `app-android` configuration.
+
+### iOS
+
+Open `app-ios/app-ios.xcodeproj` in Xcode and run the `app-ios` scheme.
+The build phase compiles the shared framework via Gradle, so Java 21 must be
+resolvable from the environment Xcode runs in.
+
+From the command line:
+
+```bash
+xcodebuild -project app-ios/app-ios.xcodeproj -scheme app-ios \
+  -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 17' build
+```
+
+### Tests
+
+```bash
+./gradlew testDebugUnitTest testAndroidHostTest
+```
+
+CI runs with `warningsAsErrors=true`. Reproduce locally with `-PwarningsAsErrors=true`.
 
 ## Architecture
 
@@ -54,6 +82,8 @@ graph TD
     style feature:home fill:#E91E63,color:#fff
     style designsystem fill:#00BCD4,color:#fff
 ```
+
+See [AGENTS.md](AGENTS.md) for conventions and how to add a feature module.
 
 ## Tech Stacks
 
