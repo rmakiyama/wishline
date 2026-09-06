@@ -11,17 +11,15 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.rmakiyama.wishline.designsystem.component.WishlineAppBar
-import com.rmakiyama.wishline.designsystem.theme.WishlineTheme
+import com.rmakiyama.wishline.designsystem.component.WlAppBar
+import com.rmakiyama.wishline.designsystem.theme.WlTheme
 import com.rmakiyama.wishline.domain.Item
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
@@ -46,7 +44,7 @@ private fun HomeScreen(
 ) {
     Scaffold(
         topBar = {
-            WishlineAppBar(title = stringResource(Res.string.home_title))
+            WlAppBar(title = stringResource(Res.string.home_title))
         },
         modifier = modifier,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -55,14 +53,14 @@ private fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = WishlineTheme.spacing.m),
+                .padding(horizontal = WlTheme.spacing.m),
             contentPadding = PaddingValues(
-                top = WishlineTheme.spacing.m,
-                bottom = WishlineTheme.spacing.m + WindowInsets.navigationBars
+                top = WlTheme.spacing.m,
+                bottom = WlTheme.spacing.m + WindowInsets.navigationBars
                     .asPaddingValues()
                     .calculateBottomPadding()
             ),
-            verticalArrangement = Arrangement.spacedBy(WishlineTheme.spacing.m),
+            verticalArrangement = Arrangement.spacedBy(WlTheme.spacing.m),
         ) {
             items(uiState.items) { item ->
                 ItemCard(item)
@@ -75,21 +73,21 @@ private fun HomeScreen(
 private fun ItemCard(item: Item) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(WishlineTheme.spacing.m),
+        shape = WlTheme.shapes.large,
     ) {
         Column(
-            modifier = Modifier.padding(WishlineTheme.spacing.l),
+            modifier = Modifier.padding(WlTheme.spacing.l),
         ) {
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                style = WlTheme.typography.titleMedium,
+                color = WlTheme.colorScheme.onSurface,
             )
             item.description?.let { description ->
                 Text(
                     text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = WlTheme.typography.bodyMedium,
+                    color = WlTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
