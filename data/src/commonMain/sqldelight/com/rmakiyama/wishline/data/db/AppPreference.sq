@@ -1,0 +1,10 @@
+CREATE TABLE app_preference (
+    pref_key TEXT NOT NULL PRIMARY KEY,
+    pref_value TEXT NOT NULL
+);
+
+selectByKey:
+SELECT pref_value FROM app_preference WHERE pref_key = ?;
+
+upsert:
+INSERT OR REPLACE INTO app_preference (pref_key, pref_value) VALUES (?, ?);
