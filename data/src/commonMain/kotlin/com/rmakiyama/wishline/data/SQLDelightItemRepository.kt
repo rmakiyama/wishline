@@ -36,12 +36,24 @@ class SQLDelightItemRepository(
 
     override suspend fun save(item: Item) {
         withContext(Dispatchers.IO) {
-            itemQueries.insert(
-                id = item.id.value,
-                title = item.title,
-                description = item.description,
-                created_at = item.createdAt.toEpochMilliseconds(),
-            )
+            insert(item)
         }
+    }
+
+    override suspend fun saveAll(items: List<Item>) {
+        withContext(Dispatchers.IO) {
+            itemQueries.transaction {
+                items.forEach(::insert)
+            }
+        }
+    }
+
+    private fun insert(item: Item) {
+        itemQueries.insert(
+            id = item.id.value,
+            title = item.title,
+            description = item.description,
+            created_at = item.createdAt.toEpochMilliseconds(),
+        )
     }
 }

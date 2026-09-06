@@ -4,6 +4,8 @@ import com.rmakiyama.wishline.data.SQLDelightItemRepository
 import com.rmakiyama.wishline.data.db.DatabaseDriverFactory
 import com.rmakiyama.wishline.data.db.WishlineDatabase
 import com.rmakiyama.wishline.domain.ItemRepository
+import com.rmakiyama.wishline.usecase.AddItem
+import com.rmakiyama.wishline.usecase.AddItemUseCase
 import com.rmakiyama.wishline.usecase.GetItemsStream
 import com.rmakiyama.wishline.usecase.GetItemsStreamUseCase
 import dev.zacsweers.metro.AppScope
@@ -32,4 +34,9 @@ interface SharedProviders {
     fun provideGetItemsStreamUseCase(
         impl: GetItemsStream,
     ): GetItemsStreamUseCase = impl
+
+    @Provides
+    fun provideAddItemUseCase(
+        impl: AddItem,
+    ): AddItemUseCase = impl
 }
