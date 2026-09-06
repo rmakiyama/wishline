@@ -21,6 +21,9 @@ sealed interface Route : NavKey
 @Serializable
 data object HomeRoute : Route
 
+@Serializable
+data object OnboardingRoute : Route
+
 /**
  * Every Route must be registered here, otherwise saving the back stack fails at runtime with
  * `SerializationException: Serializer for subclass '<Route>' is not found`. The failure is logged
@@ -35,6 +38,7 @@ val NavKeyConfiguration: SavedStateConfiguration = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
             subclass(HomeRoute::class, HomeRoute.serializer())
+            subclass(OnboardingRoute::class, OnboardingRoute.serializer())
         }
     }
 }

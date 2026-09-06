@@ -1,0 +1,4 @@
+CREATE TABLE app_preference (
+    pref_key TEXT NOT NULL PRIMARY KEY,
+    pref_value TEXT NOT NULL
+);

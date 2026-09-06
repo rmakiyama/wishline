@@ -1,11 +1,19 @@
 package com.rmakiyama.wishline.di
 
 import com.rmakiyama.wishline.data.SQLDelightItemRepository
+import com.rmakiyama.wishline.data.SQLDelightOnboardingRepository
 import com.rmakiyama.wishline.data.db.DatabaseDriverFactory
 import com.rmakiyama.wishline.data.db.WishlineDatabase
 import com.rmakiyama.wishline.domain.ItemRepository
+import com.rmakiyama.wishline.domain.OnboardingRepository
+import com.rmakiyama.wishline.usecase.AddItem
+import com.rmakiyama.wishline.usecase.AddItemUseCase
+import com.rmakiyama.wishline.usecase.CompleteOnboarding
+import com.rmakiyama.wishline.usecase.CompleteOnboardingUseCase
 import com.rmakiyama.wishline.usecase.GetItemsStream
 import com.rmakiyama.wishline.usecase.GetItemsStreamUseCase
+import com.rmakiyama.wishline.usecase.ObserveOnboardingCompleted
+import com.rmakiyama.wishline.usecase.ObserveOnboardingCompletedUseCase
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
@@ -29,7 +37,28 @@ interface SharedProviders {
     ): ItemRepository = impl
 
     @Provides
+    @SingleIn(AppScope::class)
+    fun provideOnboardingRepository(
+        impl: SQLDelightOnboardingRepository,
+    ): OnboardingRepository = impl
+
+    @Provides
     fun provideGetItemsStreamUseCase(
         impl: GetItemsStream,
     ): GetItemsStreamUseCase = impl
+
+    @Provides
+    fun provideAddItemUseCase(
+        impl: AddItem,
+    ): AddItemUseCase = impl
+
+    @Provides
+    fun provideObserveOnboardingCompletedUseCase(
+        impl: ObserveOnboardingCompleted,
+    ): ObserveOnboardingCompletedUseCase = impl
+
+    @Provides
+    fun provideCompleteOnboardingUseCase(
+        impl: CompleteOnboarding,
+    ): CompleteOnboardingUseCase = impl
 }
