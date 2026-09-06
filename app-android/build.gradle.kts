@@ -36,6 +36,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.navigation)
     implementation(projects.feature.home)
+    implementation(projects.feature.onboarding)
     implementation(projects.domain)
     implementation(projects.data)
     implementation(projects.usecase)

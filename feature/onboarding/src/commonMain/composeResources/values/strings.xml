@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_page1_headline">やりたいことを、\n書き溜める。</string>
+    <string name="onboarding_page1_body">思いついたら、ひとつずつ。ここに置いておくだけでいい。</string>
+    <string name="onboarding_page2_headline">25個集まると、\nビンゴカードになる。</string>
+    <string name="onboarding_page2_body">叶えるたびに塗って、ラインを揃える。やりたいことが、ゲームみたいに叶っていく。</string>
+    <string name="onboarding_page3_headline">まずは、書いてみよう。</string>
+    <string name="onboarding_page3_body">1つでも書けば、はじめられる。</string>
+    <string name="onboarding_input_placeholder">例：京都ひとり旅</string>
+    <string name="onboarding_add">追加</string>
+    <string name="onboarding_next">次へ</string>
+    <string name="onboarding_start">はじめる</string>
+    <string name="onboarding_later">あとで</string>
+    <string name="onboarding_sample_1">富士山に登る</string>
+    <string name="onboarding_sample_2">パンを焼く</string>
+    <string name="onboarding_sample_3">京都ひとり旅</string>
+</resources>
