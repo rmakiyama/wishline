@@ -30,7 +30,7 @@ gradlePlugin {
             id = "wishline.android.application"
             implementationClass = "AndroidApplicationConventionPlugin"
         }
-register("kotlinMultiplatform") {
+        register("kotlinMultiplatform") {
             id = "wishline.kotlin.multiplatform"
             implementationClass = "KotlinMultiplatformConventionPlugin"
         }
