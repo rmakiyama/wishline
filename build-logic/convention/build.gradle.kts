@@ -58,5 +58,9 @@ gradlePlugin {
             id = "wishline.sqldelight"
             implementationClass = "SqlDelightConventionPlugin"
         }
+        register("mokkery") {
+            id = "wishline.mokkery"
+            implementationClass = "MokkeryConventionPlugin"
+        }
     }
 }
