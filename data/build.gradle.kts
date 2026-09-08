@@ -21,5 +21,9 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
         }
+
+        getByName("androidHostTest").dependencies {
+            implementation(libs.sqldelight.driver.jvm)
+        }
     }
 }
