@@ -77,8 +77,8 @@ fun OnboardingScreen(
     OnboardingScreen(
         uiState = uiState,
         onInputChange = viewModel::onInputChange,
-        onAddItem = viewModel::onAddItem,
-        onRemoveItem = viewModel::onRemoveItem,
+        onAddWish = viewModel::onAddWish,
+        onRemoveWish = viewModel::onRemoveWish,
         onFinish = viewModel::onFinish,
         modifier = modifier,
     )
@@ -88,8 +88,8 @@ fun OnboardingScreen(
 private fun OnboardingScreen(
     uiState: OnboardingUiState,
     onInputChange: (String) -> Unit,
-    onAddItem: () -> Unit,
-    onRemoveItem: (Int) -> Unit,
+    onAddWish: () -> Unit,
+    onRemoveWish: (Int) -> Unit,
     onFinish: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -122,8 +122,8 @@ private fun OnboardingScreen(
                     else -> InputPage(
                         uiState = uiState,
                         onInputChange = onInputChange,
-                        onAddItem = onAddItem,
-                        onRemoveItem = onRemoveItem,
+                        onAddWish = onAddWish,
+                        onRemoveWish = onRemoveWish,
                     )
                 }
             }
@@ -184,8 +184,8 @@ private fun ConceptPage(
 private fun InputPage(
     uiState: OnboardingUiState,
     onInputChange: (String) -> Unit,
-    onAddItem: () -> Unit,
-    onRemoveItem: (Int) -> Unit,
+    onAddWish: () -> Unit,
+    onRemoveWish: (Int) -> Unit,
 ) {
     val spacing = WlTheme.spacing
     Column(
@@ -212,8 +212,8 @@ private fun InputPage(
                 .weight(1f, fill = false)
                 .animateContentSize(),
         ) {
-            itemsIndexed(uiState.items) { index, title ->
-                PendingItemRow(title = title, onRemove = { onRemoveItem(index) })
+            itemsIndexed(uiState.wishes) { index, title ->
+                PendingWishRow(title = title, onRemove = { onRemoveWish(index) })
                 HorizontalDivider(color = WlTheme.colorScheme.surfaceContainerHigh)
             }
         }
@@ -230,10 +230,10 @@ private fun InputPage(
                 singleLine = true,
                 shape = WlTheme.shapes.large,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { onAddItem() }),
+                keyboardActions = KeyboardActions(onDone = { onAddWish() }),
             )
             FilledIconButton(
-                onClick = onAddItem,
+                onClick = onAddWish,
                 enabled = uiState.input.isNotBlank(),
                 modifier = Modifier.size(56.dp),
                 shape = WlTheme.shapes.large,
@@ -250,7 +250,7 @@ private fun InputPage(
 }
 
 @Composable
-private fun PendingItemRow(title: String, onRemove: () -> Unit) {
+private fun PendingWishRow(title: String, onRemove: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

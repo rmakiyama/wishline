@@ -1,6 +1,6 @@
 package com.rmakiyama.wishline.feature.onboarding
 
-import com.rmakiyama.wishline.usecase.AddItemUseCase
+import com.rmakiyama.wishline.usecase.AddWishUseCase
 import com.rmakiyama.wishline.usecase.CompleteOnboardingUseCase
 import dev.mokkery.answering.returns
 import dev.mokkery.answering.throws
@@ -27,7 +27,7 @@ import kotlin.test.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class OnboardingViewModelTest {
 
-    private val addItem = mock<AddItemUseCase> {
+    private val addWish = mock<AddWishUseCase> {
         everySuspend { invoke(any<List<String>>()) } returns Unit
     }
     private val completeOnboarding = mock<CompleteOnboardingUseCase> {
@@ -44,65 +44,65 @@ class OnboardingViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = OnboardingViewModel(addItem, completeOnboarding)
+    private fun viewModel() = OnboardingViewModel(addWish, completeOnboarding)
 
     @Test
-    fun addItemAppendsTrimmedInputAndClearsIt() {
+    fun addWishAppendsTrimmedInputAndClearsIt() {
         val vm = viewModel()
         vm.onInputChange("  富士山に登る ")
-        vm.onAddItem()
+        vm.onAddWish()
 
-        vm.uiState.value.items shouldContainExactly listOf("富士山に登る")
+        vm.uiState.value.wishes shouldContainExactly listOf("富士山に登る")
         vm.uiState.value.input shouldBe ""
     }
 
     @Test
-    fun addItemIgnoresBlankInput() {
+    fun addWishIgnoresBlankInput() {
         val vm = viewModel()
         vm.onInputChange("   ")
-        vm.onAddItem()
+        vm.onAddWish()
 
-        vm.uiState.value.items shouldBe emptyList()
+        vm.uiState.value.wishes shouldBe emptyList()
     }
 
     @Test
-    fun canStartRequiresAnItem() {
+    fun canStartRequiresAWish() {
         val vm = viewModel()
         vm.uiState.value.canStart.shouldBeFalse()
 
-        vm.onInputChange("A"); vm.onAddItem()
+        vm.onInputChange("A"); vm.onAddWish()
         vm.uiState.value.canStart.shouldBeTrue()
     }
 
     @Test
-    fun finishSavesItemsInOneCallThenCompletes() = runTest {
+    fun finishSavesWishesInOneCallThenCompletes() = runTest {
         val vm = viewModel()
-        vm.onInputChange("A"); vm.onAddItem()
-        vm.onInputChange("B"); vm.onAddItem()
+        vm.onInputChange("A"); vm.onAddWish()
+        vm.onInputChange("B"); vm.onAddWish()
 
         vm.onFinish()
 
-        verifySuspend(exactly(1)) { addItem.invoke(listOf("A", "B")) }
+        verifySuspend(exactly(1)) { addWish.invoke(listOf("A", "B")) }
         verifySuspend(exactly(1)) { completeOnboarding.invoke() }
         vm.uiState.value.isCompleted.shouldBeTrue()
     }
 
     @Test
-    fun finishWithoutItemsOnlyCompletes() = runTest {
+    fun finishWithoutWishesOnlyCompletes() = runTest {
         val vm = viewModel()
 
         vm.onFinish()
 
-        verifySuspend(not) { addItem.invoke(any<List<String>>()) }
+        verifySuspend(not) { addWish.invoke(any<List<String>>()) }
         verifySuspend(exactly(1)) { completeOnboarding.invoke() }
         vm.uiState.value.isCompleted.shouldBeTrue()
     }
 
     @Test
     fun finishFailureReleasesSubmittingSoUserCanRetry() = runTest {
-        everySuspend { addItem.invoke(any<List<String>>()) } throws IllegalStateException("disk full")
+        everySuspend { addWish.invoke(any<List<String>>()) } throws IllegalStateException("disk full")
         val vm = viewModel()
-        vm.onInputChange("A"); vm.onAddItem()
+        vm.onInputChange("A"); vm.onAddWish()
 
         vm.onFinish()
 
@@ -112,13 +112,13 @@ class OnboardingViewModelTest {
     }
 
     @Test
-    fun removeItemDropsOnlyThatIndex() {
+    fun removeWishDropsOnlyThatIndex() {
         val vm = viewModel()
-        vm.onInputChange("A"); vm.onAddItem()
-        vm.onInputChange("B"); vm.onAddItem()
+        vm.onInputChange("A"); vm.onAddWish()
+        vm.onInputChange("B"); vm.onAddWish()
 
-        vm.onRemoveItem(0)
+        vm.onRemoveWish(0)
 
-        vm.uiState.value.items shouldContainExactly listOf("B")
+        vm.uiState.value.wishes shouldContainExactly listOf("B")
     }
 }

@@ -1,0 +1,17 @@
+CREATE TABLE wish_title_change (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    wish_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    changed_at INTEGER NOT NULL
+);
+
+CREATE INDEX wish_title_change_wish ON wish_title_change(wish_id);
+
+insert:
+INSERT INTO wish_title_change (wish_id, title, changed_at) VALUES (?, ?, ?);
+
+selectByWish:
+SELECT * FROM wish_title_change WHERE wish_id = ? ORDER BY changed_at ASC, id ASC;
+
+deleteByWish:
+DELETE FROM wish_title_change WHERE wish_id = ?;

@@ -1,0 +1,30 @@
+CREATE TABLE bingo_slot (
+    bingo_card_id TEXT NOT NULL,
+    position INTEGER NOT NULL,
+    wish_id TEXT NOT NULL,
+    marked_at INTEGER,
+    PRIMARY KEY (bingo_card_id, position)
+);
+
+CREATE INDEX bingo_slot_wish ON bingo_slot(wish_id);
+
+insert:
+INSERT INTO bingo_slot (bingo_card_id, position, wish_id, marked_at) VALUES (?, ?, ?, NULL);
+
+selectOpenCardIdForWish:
+SELECT bingo_slot.bingo_card_id FROM bingo_slot
+JOIN bingo_card ON bingo_card.id = bingo_slot.bingo_card_id
+WHERE bingo_slot.wish_id = ? AND bingo_card.closed_at IS NULL;
+
+countOpenSlotsForWishes:
+SELECT count(*) FROM bingo_slot
+JOIN bingo_card ON bingo_card.id = bingo_slot.bingo_card_id
+WHERE bingo_slot.wish_id IN ? AND bingo_card.closed_at IS NULL;
+
+countSlotsForWish:
+SELECT count(*) FROM bingo_slot WHERE wish_id = ?;
+
+updateMarkedAtOnOpenCard:
+UPDATE bingo_slot SET marked_at = ?
+WHERE wish_id = ?
+  AND bingo_card_id IN (SELECT id FROM bingo_card WHERE closed_at IS NULL);
