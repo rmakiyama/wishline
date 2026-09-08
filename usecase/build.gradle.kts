@@ -2,6 +2,7 @@ plugins {
     id("wishline.kotlin.multiplatform")
     id("wishline.kotlin.multiplatform.ios")
     id("wishline.metro")
+    id("wishline.mokkery")
 }
 
 kotlin {
