@@ -25,7 +25,8 @@ data class BingoCard(
 
 /**
  * A slot keeps its position and wish for the life of the card. Only [status] moves, and only while
- * the card is open, which is what leaves a closed card exactly as it was on the day it closed.
+ * the card is open, so a closed card keeps the marks it ended with. The wish it shows is the wish
+ * as it is now.
  */
 data class BingoSlot(
     val position: Int,

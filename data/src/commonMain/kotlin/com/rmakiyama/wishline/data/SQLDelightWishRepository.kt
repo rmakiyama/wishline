@@ -53,7 +53,7 @@ class SQLDelightWishRepository(
         }
     }
 
-    /** The slot only moves while its card is open, which leaves a closed card as it was. */
+    /** The slot only moves while its card is open, so a closed card keeps the marks it ended with. */
     override suspend fun changeStatus(id: WishId, status: WishStatus) {
         withContext(Dispatchers.IO) {
             val changedAt = status.at.toEpochMilliseconds()
