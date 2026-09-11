@@ -40,6 +40,8 @@ class FeatureConventionPlugin : Plugin<Project> {
                         implementation(libs.findLibrary("compose-foundation").get())
                         implementation(libs.findLibrary("compose-components-resources").get())
 
+                        implementation(libs.findLibrary("kotlinx-datetime").get())
+
                         implementation(libs.findLibrary("androidx-navigation3-runtime").get())
                         implementation(libs.findLibrary("androidx-lifecycle-viewmodelCompose").get())
                         implementation(libs.findLibrary("androidx-lifecycle-runtimeCompose").get())
