@@ -27,8 +27,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -69,8 +68,9 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `given the streams have not emitted, then the screen is not loaded`() = runTest(dispatcher) {
-        val vm = HomeViewModel(getOpenCards, getUnassigned, addWish, createCard)
+    fun `given only the cards have been emitted, then the screen is not loaded`() = runTest(dispatcher) {
+        every { getUnassigned.invoke() } returns emptyFlow()
+        val vm = viewModel()
 
         vm.uiState.value.isLoaded.shouldBeFalse()
     }
@@ -209,12 +209,7 @@ class HomeViewModelTest {
         vm.uiState.value.createdCardId.shouldBeNull()
     }
 
-    /** `uiState` only runs while collected, so every test keeps a collector alive in the background. */
-    private fun TestScope.viewModel(): HomeViewModel {
-        val vm = HomeViewModel(getOpenCards, getUnassigned, addWish, createCard)
-        backgroundScope.launch { vm.uiState.collect {} }
-        return vm
-    }
+    private fun viewModel() = HomeViewModel(getOpenCards, getUnassigned, addWish, createCard)
 
     private fun card(id: String): BingoCard = BingoCard(
         id = BingoCardId(id),
