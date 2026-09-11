@@ -68,6 +68,7 @@ graph TD
     feature:home --> domain
 
     core:ui --> designsystem
+    core:ui --> core:navigation
 
     usecase --> domain
     data --> domain

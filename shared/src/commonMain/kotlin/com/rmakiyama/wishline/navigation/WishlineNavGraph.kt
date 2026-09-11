@@ -11,13 +11,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavBackStack
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.rmakiyama.wishline.AppViewModel
+import com.rmakiyama.wishline.core.ui.component.WlBottomBar
 import com.rmakiyama.wishline.designsystem.theme.WlTheme
 import com.rmakiyama.wishline.feature.archive.navigation.archiveEntry
 import com.rmakiyama.wishline.feature.home.navigation.homeEntry
@@ -43,12 +42,12 @@ fun WishlineNavGraph(
 @Composable
 private fun WishlineNavGraph(startRoute: Route) {
     val backStack = rememberNavBackStack(NavKeyConfiguration, startRoute)
-    val currentTab = TopLevelDestination.of(backStack.lastOrNull() as? Route)
+    val currentTab = TopLevelDestination.of(backStack.lastOrNull())
 
     Scaffold(
         bottomBar = {
             if (currentTab != null) {
-                WishlineBottomBar(
+                WlBottomBar(
                     current = currentTab,
                     onSelect = { backStack.switchTab(it) },
                 )
@@ -79,15 +78,4 @@ private fun WishlineNavGraph(startRoute: Route) {
             },
         )
     }
-}
-
-/**
- * HOME stays at the root and the other tabs sit on top of it one at a time, so back from any tab
- * returns to HOME rather than leaving the app. Only entries above HOME are removed, which keeps
- * HOME's state alive across tab switches.
- */
-private fun NavBackStack<NavKey>.switchTab(destination: TopLevelDestination) {
-    if (lastOrNull() == destination.route) return
-    while (size > 1) removeLastOrNull()
-    if (destination.route != HomeRoute) add(destination.route)
 }

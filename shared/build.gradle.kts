@@ -6,15 +6,7 @@ plugins {
     id("wishline.ios.framework")
 }
 
-compose.resources {
-    packageOfResClass = "com.rmakiyama.wishline.shared"
-}
-
 kotlin {
-    androidLibrary {
-        androidResources { enable = true }
-    }
-
     sourceSets {
         commonMain.dependencies {
             api(libs.kermit)
@@ -32,7 +24,6 @@ kotlin {
             implementation(libs.compose.ui)
             implementation(libs.compose.material3)
             implementation(libs.compose.foundation)
-            implementation(libs.compose.components.resources)
 
             implementation(libs.androidx.navigation3.runtime)
             implementation(libs.androidx.navigation3.ui)
