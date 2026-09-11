@@ -79,6 +79,16 @@ class SQLDelightWishRepositoryTest {
     }
 
     @Test
+    fun `given two changes in the same millisecond, when reading the history, then insertion order is kept`() = runTest {
+        repository.add(listOf(wish("w1", "a")))
+
+        repository.changeStatus(WishId("w1"), WishStatus.Done(at(2)))
+        repository.changeStatus(WishId("w1"), WishStatus.Planned(at(2)))
+
+        statusHistory("w1") shouldContainExactly listOf("PLANNED", "DONE", "PLANNED")
+    }
+
+    @Test
     fun `when the status changes repeatedly, then the wish shows the newest one`() = runTest {
         repository.add(listOf(wish("w1", "a")))
 

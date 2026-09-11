@@ -30,14 +30,14 @@ erDiagram
         INTEGER marked_at "NULL until marked; frozen once the card closes"
     }
     wish_status_change {
-        INTEGER id PK "AUTOINCREMENT"
+        TEXT id PK
         TEXT wish_id FK
         TEXT status
         TEXT bingo_card_id FK "card it sat on at the time, else NULL"
         INTEGER changed_at
     }
     wish_title_change {
-        INTEGER id PK "AUTOINCREMENT"
+        TEXT id PK
         TEXT wish_id FK
         TEXT title
         INTEGER changed_at
@@ -49,5 +49,6 @@ erDiagram
 ```
 
 - Every foreign key is `ON DELETE RESTRICT`. SQLite enforces them only when the connection asks, so each `DatabaseDriverFactory` and the test driver turn them on
+- Every id is a UUID generated on the device, events included, so rows from different devices never collide. Events are ordered by `changed_at`, then `rowid`
 - Timestamps are epoch milliseconds
 - `app_preference` is a key-value table for flags such as onboarding completion; it is unrelated to the bingo model

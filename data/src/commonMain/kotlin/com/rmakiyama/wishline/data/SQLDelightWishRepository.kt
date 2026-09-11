@@ -13,6 +13,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 @Inject
 class SQLDelightWishRepository(
@@ -45,6 +46,7 @@ class SQLDelightWishRepository(
             database.transaction {
                 wishQueries.updateTitle(title = title, id = id.value)
                 titleChangeQueries.insert(
+                    id = newEventId(),
                     wish_id = id.value,
                     title = title,
                     changed_at = at.toEpochMilliseconds(),
@@ -60,6 +62,7 @@ class SQLDelightWishRepository(
             database.transaction {
                 val openCardId = slotQueries.selectOpenCardIdForWish(id.value).executeAsOneOrNull()
                 statusChangeQueries.insert(
+                    id = newEventId(),
                     wish_id = id.value,
                     status = status.column(),
                     bingo_card_id = openCardId,
@@ -99,15 +102,19 @@ class SQLDelightWishRepository(
             created_at = createdAt,
         )
         titleChangeQueries.insert(
+            id = newEventId(),
             wish_id = wish.id.value,
             title = wish.title,
             changed_at = createdAt,
         )
         statusChangeQueries.insert(
+            id = newEventId(),
             wish_id = wish.id.value,
             status = wish.status.column(),
             bingo_card_id = null,
             changed_at = statusAt,
         )
     }
+
+    private fun newEventId(): String = Uuid.random().toString()
 }

@@ -30,14 +30,14 @@ erDiagram
         INTEGER marked_at "埋まるまで NULL。カードがクローズしたら固定"
     }
     wish_status_change {
-        INTEGER id PK "AUTOINCREMENT"
+        TEXT id PK
         TEXT wish_id FK
         TEXT status
         TEXT bingo_card_id FK "そのとき乗っていたカード。無ければ NULL"
         INTEGER changed_at
     }
     wish_title_change {
-        INTEGER id PK "AUTOINCREMENT"
+        TEXT id PK
         TEXT wish_id FK
         TEXT title
         INTEGER changed_at
@@ -49,5 +49,6 @@ erDiagram
 ```
 
 - 外部キーはすべて `ON DELETE RESTRICT`。SQLite は接続が求めたときだけ強制するので、各 `DatabaseDriverFactory` とテスト用ドライバで有効にしている
+- id はイベントも含めてすべて端末で生成する UUID。別の端末の行と衝突しない。イベントの並びは `changed_at`、同時刻なら `rowid`
 - 時刻はすべてエポックミリ秒
 - `app_preference` はオンボーディング完了などのフラグを持つ KV テーブルで、ビンゴのモデルとは無関係
