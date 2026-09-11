@@ -1,6 +1,6 @@
 package com.rmakiyama.wishline.feature.onboarding
 
-import com.rmakiyama.wishline.usecase.AddItemUseCase
+import com.rmakiyama.wishline.usecase.AddWishUseCase
 import com.rmakiyama.wishline.usecase.CompleteOnboardingUseCase
 import dev.mokkery.answering.returns
 import dev.mokkery.answering.throws
@@ -27,7 +27,7 @@ import kotlin.test.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class OnboardingViewModelTest {
 
-    private val addItem = mock<AddItemUseCase> {
+    private val addWish = mock<AddWishUseCase> {
         everySuspend { invoke(any<List<String>>()) } returns Unit
     }
     private val completeOnboarding = mock<CompleteOnboardingUseCase> {
@@ -44,81 +44,125 @@ class OnboardingViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = OnboardingViewModel(addItem, completeOnboarding)
+    @Test
+    fun `given input with spaces around it, when it is added, then it is kept trimmed`() {
+        val vm = viewModel()
+
+        vm.onInputChange("  富士山に登る ")
+        vm.onAddWish()
+
+        vm.uiState.value.wishes shouldContainExactly listOf("富士山に登る")
+    }
 
     @Test
-    fun addItemAppendsTrimmedInputAndClearsIt() {
+    fun `when the input is added, then the field is cleared`() {
         val vm = viewModel()
-        vm.onInputChange("  富士山に登る ")
-        vm.onAddItem()
 
-        vm.uiState.value.items shouldContainExactly listOf("富士山に登る")
+        vm.onInputChange("富士山に登る")
+        vm.onAddWish()
+
         vm.uiState.value.input shouldBe ""
     }
 
     @Test
-    fun addItemIgnoresBlankInput() {
+    fun `given blank input, when it is added, then nothing is kept`() {
         val vm = viewModel()
-        vm.onInputChange("   ")
-        vm.onAddItem()
 
-        vm.uiState.value.items shouldBe emptyList()
+        vm.onInputChange("   ")
+        vm.onAddWish()
+
+        vm.uiState.value.wishes shouldBe emptyList()
     }
 
     @Test
-    fun canStartRequiresAnItem() {
-        val vm = viewModel()
-        vm.uiState.value.canStart.shouldBeFalse()
+    fun `given nothing has been written, then starting is not allowed`() {
+        viewModel().uiState.value.canStart.shouldBeFalse()
+    }
 
-        vm.onInputChange("A"); vm.onAddItem()
+    @Test
+    fun `given one wish has been written, then starting is allowed`() {
+        val vm = viewModel()
+
+        vm.onInputChange("A")
+        vm.onAddWish()
+
         vm.uiState.value.canStart.shouldBeTrue()
     }
 
     @Test
-    fun finishSavesItemsInOneCallThenCompletes() = runTest {
-        val vm = viewModel()
-        vm.onInputChange("A"); vm.onAddItem()
-        vm.onInputChange("B"); vm.onAddItem()
+    fun `given two wishes, when finishing, then both are saved in one call`() = runTest {
+        val vm = viewModel().withWishes("A", "B")
 
         vm.onFinish()
 
-        verifySuspend(exactly(1)) { addItem.invoke(listOf("A", "B")) }
+        verifySuspend(exactly(1)) { addWish.invoke(listOf("A", "B")) }
+    }
+
+    @Test
+    fun `given two wishes, when finishing, then onboarding is completed`() = runTest {
+        val vm = viewModel().withWishes("A", "B")
+
+        vm.onFinish()
+
         verifySuspend(exactly(1)) { completeOnboarding.invoke() }
         vm.uiState.value.isCompleted.shouldBeTrue()
     }
 
     @Test
-    fun finishWithoutItemsOnlyCompletes() = runTest {
+    fun `given no wish, when finishing, then nothing is saved`() = runTest {
         val vm = viewModel()
 
         vm.onFinish()
 
-        verifySuspend(not) { addItem.invoke(any<List<String>>()) }
+        verifySuspend(not) { addWish.invoke(any<List<String>>()) }
+    }
+
+    @Test
+    fun `given no wish, when finishing, then onboarding is completed`() = runTest {
+        val vm = viewModel()
+
+        vm.onFinish()
+
         verifySuspend(exactly(1)) { completeOnboarding.invoke() }
         vm.uiState.value.isCompleted.shouldBeTrue()
     }
 
     @Test
-    fun finishFailureReleasesSubmittingSoUserCanRetry() = runTest {
-        everySuspend { addItem.invoke(any<List<String>>()) } throws IllegalStateException("disk full")
-        val vm = viewModel()
-        vm.onInputChange("A"); vm.onAddItem()
+    fun `given saving fails, when finishing, then the screen can be used again`() = runTest {
+        everySuspend { addWish.invoke(any<List<String>>()) } throws IllegalStateException("disk full")
+        val vm = viewModel().withWishes("A")
 
         vm.onFinish()
 
         vm.uiState.value.isSubmitting.shouldBeFalse()
+    }
+
+    @Test
+    fun `given saving fails, when finishing, then onboarding is not completed`() = runTest {
+        everySuspend { addWish.invoke(any<List<String>>()) } throws IllegalStateException("disk full")
+        val vm = viewModel().withWishes("A")
+
+        vm.onFinish()
+
         vm.uiState.value.isCompleted.shouldBeFalse()
         verifySuspend(not) { completeOnboarding.invoke() }
     }
 
     @Test
-    fun removeItemDropsOnlyThatIndex() {
-        val vm = viewModel()
-        vm.onInputChange("A"); vm.onAddItem()
-        vm.onInputChange("B"); vm.onAddItem()
+    fun `given two wishes, when one is removed, then only that one is dropped`() {
+        val vm = viewModel().withWishes("A", "B")
 
-        vm.onRemoveItem(0)
+        vm.onRemoveWish(0)
 
-        vm.uiState.value.items shouldContainExactly listOf("B")
+        vm.uiState.value.wishes shouldContainExactly listOf("B")
+    }
+
+    private fun viewModel() = OnboardingViewModel(addWish, completeOnboarding)
+
+    private fun OnboardingViewModel.withWishes(vararg titles: String) = apply {
+        titles.forEach {
+            onInputChange(it)
+            onAddWish()
+        }
     }
 }

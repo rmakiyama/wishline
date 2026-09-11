@@ -20,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rmakiyama.wishline.designsystem.component.WlAppBar
 import com.rmakiyama.wishline.designsystem.theme.WlTheme
-import com.rmakiyama.wishline.domain.Item
+import com.rmakiyama.wishline.domain.Wish
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
 
@@ -62,15 +62,15 @@ private fun HomeScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(WlTheme.spacing.m),
         ) {
-            items(uiState.items) { item ->
-                ItemCard(item)
+            items(uiState.wishes) { wish ->
+                WishCard(wish)
             }
         }
     }
 }
 
 @Composable
-private fun ItemCard(item: Item) {
+private fun WishCard(wish: Wish) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = WlTheme.shapes.large,
@@ -79,17 +79,10 @@ private fun ItemCard(item: Item) {
             modifier = Modifier.padding(WlTheme.spacing.l),
         ) {
             Text(
-                text = item.title,
+                text = wish.title,
                 style = WlTheme.typography.titleMedium,
                 color = WlTheme.colorScheme.onSurface,
             )
-            item.description?.let { description ->
-                Text(
-                    text = description,
-                    style = WlTheme.typography.bodyMedium,
-                    color = WlTheme.colorScheme.onSurfaceVariant,
-                )
-            }
         }
     }
 }

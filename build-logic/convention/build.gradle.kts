@@ -21,7 +21,6 @@ dependencies {
     compileOnly(libs.android.gradlePlugin)
     compileOnly(libs.kotlin.gradlePlugin)
     compileOnly(libs.compose.gradlePlugin)
-    compileOnly(libs.sqldelight.gradlePlugin)
 }
 
 gradlePlugin {
@@ -30,7 +29,7 @@ gradlePlugin {
             id = "wishline.android.application"
             implementationClass = "AndroidApplicationConventionPlugin"
         }
-register("kotlinMultiplatform") {
+        register("kotlinMultiplatform") {
             id = "wishline.kotlin.multiplatform"
             implementationClass = "KotlinMultiplatformConventionPlugin"
         }
@@ -57,6 +56,10 @@ register("kotlinMultiplatform") {
         register("sqldelight") {
             id = "wishline.sqldelight"
             implementationClass = "SqlDelightConventionPlugin"
+        }
+        register("mokkery") {
+            id = "wishline.mokkery"
+            implementationClass = "MokkeryConventionPlugin"
         }
     }
 }

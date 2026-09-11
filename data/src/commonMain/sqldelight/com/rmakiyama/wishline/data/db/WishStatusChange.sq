@@ -1,0 +1,18 @@
+CREATE TABLE wish_status_change (
+    id TEXT NOT NULL PRIMARY KEY,
+    wish_id TEXT NOT NULL REFERENCES wish(id) ON DELETE RESTRICT,
+    status TEXT NOT NULL,
+    bingo_card_id TEXT REFERENCES bingo_card(id) ON DELETE RESTRICT,
+    changed_at INTEGER NOT NULL
+);
+
+CREATE INDEX wish_status_change_wish ON wish_status_change(wish_id);
+
+insert:
+INSERT INTO wish_status_change (id, wish_id, status, bingo_card_id, changed_at) VALUES (?, ?, ?, ?, ?);
+
+selectByWish:
+SELECT * FROM wish_status_change WHERE wish_id = ? ORDER BY changed_at ASC, rowid ASC;
+
+deleteByWish:
+DELETE FROM wish_status_change WHERE wish_id = ?;

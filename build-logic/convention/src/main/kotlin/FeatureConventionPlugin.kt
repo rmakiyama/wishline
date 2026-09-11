@@ -16,7 +16,6 @@ class FeatureConventionPlugin : Plugin<Project> {
             pluginManager.apply("wishline.kotlin.multiplatform.ios")
             pluginManager.apply("wishline.compose.multiplatform")
             pluginManager.apply("wishline.metro")
-            pluginManager.apply("dev.mokkery")
 
             extensions.configure<ComposeExtension> {
                 extensions.configure<ResourcesExtension> {

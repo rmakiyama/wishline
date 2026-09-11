@@ -1,0 +1,57 @@
+CREATE TABLE bingo_card (
+    id TEXT NOT NULL PRIMARY KEY,
+    number INTEGER NOT NULL UNIQUE,
+    label TEXT,
+    created_at INTEGER NOT NULL,
+    closed_at INTEGER
+);
+
+selectOpenSlots:
+SELECT bingo_card.id AS card_id,
+       bingo_card.number AS card_number,
+       bingo_card.label AS card_label,
+       bingo_card.created_at AS card_created_at,
+       bingo_card.closed_at AS card_closed_at,
+       bingo_slot.position AS slot_position,
+       bingo_slot.marked_at AS slot_marked_at,
+       wish.id AS wish_id,
+       wish.title AS wish_title,
+       wish.status AS wish_status,
+       wish.status_at AS wish_status_at,
+       wish.created_at AS wish_created_at
+FROM bingo_card
+JOIN bingo_slot ON bingo_slot.bingo_card_id = bingo_card.id
+JOIN wish ON wish.id = bingo_slot.wish_id
+WHERE bingo_card.closed_at IS NULL
+ORDER BY bingo_card.created_at ASC, bingo_card.rowid ASC, bingo_slot.position ASC;
+
+selectClosedSlots:
+SELECT bingo_card.id AS card_id,
+       bingo_card.number AS card_number,
+       bingo_card.label AS card_label,
+       bingo_card.created_at AS card_created_at,
+       bingo_card.closed_at AS card_closed_at,
+       bingo_slot.position AS slot_position,
+       bingo_slot.marked_at AS slot_marked_at,
+       wish.id AS wish_id,
+       wish.title AS wish_title,
+       wish.status AS wish_status,
+       wish.status_at AS wish_status_at,
+       wish.created_at AS wish_created_at
+FROM bingo_card
+JOIN bingo_slot ON bingo_slot.bingo_card_id = bingo_card.id
+JOIN wish ON wish.id = bingo_slot.wish_id
+WHERE bingo_card.closed_at IS NOT NULL
+ORDER BY bingo_card.closed_at DESC, bingo_card.rowid DESC, bingo_slot.position ASC;
+
+selectNextNumber:
+SELECT coalesce(max(number), 0) + 1 AS next_number FROM bingo_card;
+
+insert:
+INSERT INTO bingo_card (id, number, label, created_at, closed_at) VALUES (?, ?, ?, ?, NULL);
+
+close:
+UPDATE bingo_card SET closed_at = ? WHERE id = ? AND closed_at IS NULL;
+
+updateLabel:
+UPDATE bingo_card SET label = ? WHERE id = ?;

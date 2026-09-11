@@ -2,7 +2,7 @@ package com.rmakiyama.wishline.feature.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rmakiyama.wishline.usecase.AddItemUseCase
+import com.rmakiyama.wishline.usecase.AddWishUseCase
 import com.rmakiyama.wishline.usecase.CompleteOnboardingUseCase
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 @ViewModelKey
 @Inject
 class OnboardingViewModel(
-    private val addItemUseCase: AddItemUseCase,
+    private val addWishUseCase: AddWishUseCase,
     private val completeOnboardingUseCase: CompleteOnboardingUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(OnboardingUiState())
@@ -28,21 +28,21 @@ class OnboardingViewModel(
         _uiState.update { it.copy(input = value) }
     }
 
-    /** Appends the current input as a pending item. Blank input is ignored. */
-    fun onAddItem() {
+    /** Appends the current input as a pending wish. Blank input is ignored. */
+    fun onAddWish() {
         val title = _uiState.value.input.trim()
         if (title.isEmpty()) return
-        _uiState.update { it.copy(items = it.items + title, input = "") }
+        _uiState.update { it.copy(wishes = it.wishes + title, input = "") }
     }
 
-    fun onRemoveItem(index: Int) {
+    fun onRemoveWish(index: Int) {
         _uiState.update { state ->
-            state.copy(items = state.items.filterIndexed { i, _ -> i != index })
+            state.copy(wishes = state.wishes.filterIndexed { i, _ -> i != index })
         }
     }
 
     /**
-     * Saves the pending items, then completes onboarding. Used by both "はじめる" and "あとで":
+     * Saves the pending wishes, then completes onboarding. Used by both "はじめる" and "あとで":
      * whatever the user typed is kept either way. If saving fails, the screen becomes usable
      * again so the user can retry.
      */
@@ -52,7 +52,7 @@ class OnboardingViewModel(
         _uiState.update { it.copy(isSubmitting = true) }
         viewModelScope.launch {
             try {
-                if (state.items.isNotEmpty()) addItemUseCase(state.items)
+                if (state.wishes.isNotEmpty()) addWishUseCase(state.wishes)
                 completeOnboardingUseCase()
                 _uiState.update { it.copy(isCompleted = true) }
             } catch (e: Exception) {
@@ -63,10 +63,10 @@ class OnboardingViewModel(
 }
 
 data class OnboardingUiState(
-    val items: List<String> = emptyList(),
+    val wishes: List<String> = emptyList(),
     val input: String = "",
     val isSubmitting: Boolean = false,
     val isCompleted: Boolean = false,
 ) {
-    val canStart: Boolean get() = items.isNotEmpty() && !isSubmitting
+    val canStart: Boolean get() = wishes.isNotEmpty() && !isSubmitting
 }

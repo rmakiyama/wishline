@@ -7,28 +7,31 @@ import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+/**
+ * A Route that is not registered in [NavKeyConfiguration] makes back stack persistence fail at
+ * runtime, and the failure is only logged. Enumerating the sealed hierarchy keeps that mistake
+ * from reaching a device.
+ */
+@OptIn(ExperimentalSerializationApi::class)
 class RouteRegistrationTest {
 
-    /**
-     * A Route that is not registered in [NavKeyConfiguration] makes back stack persistence fail at
-     * runtime, and the failure is only logged. Enumerating the sealed hierarchy keeps that mistake
-     * from reaching a device.
-     */
-    @OptIn(ExperimentalSerializationApi::class)
     @Test
-    fun everyRouteIsRegisteredInNavKeyConfiguration() {
-        val serialNames = Route.serializer().descriptor
-            .getElementDescriptor(1)
-            .elementDescriptors
-            .map { it.serialName }
+    fun `given the sealed Route hierarchy, then its subtypes can be enumerated`() {
+        assertTrue(routeSerialNames().isNotEmpty(), "No Route subtype was found — the enumeration broke")
+    }
 
-        assertTrue(serialNames.isNotEmpty(), "No Route subtype was found — the enumeration broke")
-
-        serialNames.forEach { serialName ->
+    @Test
+    fun `given every Route subtype, then each one is registered in NavKeyConfiguration`() {
+        routeSerialNames().forEach { serialName ->
             assertNotNull(
                 NavKeyConfiguration.serializersModule.getPolymorphic(NavKey::class, serialName),
                 "Route '$serialName' is missing from NavKeyConfiguration",
             )
         }
     }
+
+    private fun routeSerialNames(): List<String> = Route.serializer().descriptor
+        .getElementDescriptor(1)
+        .elementDescriptors
+        .map { it.serialName }
 }

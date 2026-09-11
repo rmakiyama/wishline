@@ -8,6 +8,12 @@ actual class DatabaseDriverFactory {
         return NativeSqliteDriver(
             schema = WishlineDatabase.Schema,
             name = "wishline.db",
+            onConfiguration = { configuration ->
+                // SQLite leaves foreign keys unenforced unless every connection asks for them.
+                configuration.copy(
+                    extendedConfig = configuration.extendedConfig.copy(foreignKeyConstraints = true),
+                )
+            },
         )
     }
 }

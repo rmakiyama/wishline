@@ -1,0 +1,32 @@
+CREATE TABLE wish (
+    id TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    status TEXT NOT NULL,
+    status_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+);
+
+selectAll:
+SELECT * FROM wish ORDER BY created_at DESC, rowid DESC;
+
+selectUnassigned:
+SELECT wish.* FROM wish
+WHERE wish.status = 'PLANNED'
+  AND NOT EXISTS (
+      SELECT 1 FROM bingo_slot
+      JOIN bingo_card ON bingo_card.id = bingo_slot.bingo_card_id
+      WHERE bingo_slot.wish_id = wish.id AND bingo_card.closed_at IS NULL
+  )
+ORDER BY wish.created_at ASC, wish.rowid ASC;
+
+insert:
+INSERT INTO wish (id, title, status, status_at, created_at) VALUES (?, ?, ?, ?, ?);
+
+updateTitle:
+UPDATE wish SET title = ? WHERE id = ?;
+
+updateStatus:
+UPDATE wish SET status = ?, status_at = ? WHERE id = ?;
+
+delete:
+DELETE FROM wish WHERE id = ?;
