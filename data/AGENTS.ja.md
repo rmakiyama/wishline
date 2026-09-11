@@ -18,6 +18,8 @@
 
 ## SQLDelight
 
+スキーマの ER 図は `.sq` の隣、`src/commonMain/sqldelight/com/rmakiyama/wishline/data/db/AGENTS.md` にある。
+
 - クエリの mapper オーバーロード（`selectAll(::toWish)`）を使い、生成された行クラスを経由せずにドメインの型へ変換する
 - `asFlow()` はクエリが名前を挙げたテーブルのいずれかが変わると再発火する。JOIN や副問い合わせを Kotlin 側に移すとその集合からテーブルが抜け、画面が無言で更新されなくなる
 - Flow のテストは変更をまたいで collect し続けて確認する

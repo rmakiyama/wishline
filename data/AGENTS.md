@@ -18,6 +18,8 @@ Closing a card stops its slots from moving, so the marks it ended with are froze
 
 ## SQLDelight
 
+The schema diagram lives next to the `.sq` files, in `src/commonMain/sqldelight/com/rmakiyama/wishline/data/db/AGENTS.md`.
+
 - Prefer a query's mapper overload (`selectAll(::toWish)`) so rows become domain types without the generated row class
 - `asFlow()` re-emits when any table the query names changes. Moving a join or a subquery into Kotlin drops tables from that set, and the screen silently stops updating
 - Test a flow by collecting across the change, not by reading again afterwards
