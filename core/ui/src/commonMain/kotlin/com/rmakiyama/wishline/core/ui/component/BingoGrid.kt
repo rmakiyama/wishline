@@ -17,13 +17,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -130,16 +131,16 @@ private fun BingoCellView(
                 if (cell.state == BingoCellState.Someday) {
                     Modifier.drawBehind {
                         val stroke = 1.5.dp.toPx()
-                        drawRoundRect(
-                            color = dashColor,
-                            topLeft = Offset(stroke / 2, stroke / 2),
-                            size = size.copy(width = size.width - stroke, height = size.height - stroke),
-                            cornerRadius = CornerRadius(12.dp.toPx()),
-                            style = Stroke(
-                                width = stroke,
-                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx())),
-                            ),
-                        )
+                        inset(stroke / 2) {
+                            drawOutline(
+                                outline = shape.createOutline(size, layoutDirection, this),
+                                color = dashColor,
+                                style = Stroke(
+                                    width = stroke,
+                                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx())),
+                                ),
+                            )
+                        }
                     }
                 } else {
                     Modifier

@@ -7,10 +7,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,17 +70,18 @@ internal fun BingoCardPage(card: BingoCard) {
                 color = WlTheme.colorScheme.onSurfaceVariant,
             )
         }
+        // Slots are placed by position, not by list order, so a line always covers its own cells.
+        val cells = remember(card) { card.slots.sortedBy { it.position }.map(BingoSlot::toCell) }
+        val completedLines = remember(card) { card.completedLines().map { it.positions } }
         Box(
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
+            // Square, and shrinks by height when the page is shorter than it is wide.
             BingoGrid(
-                cells = card.slots.map(BingoSlot::toCell),
-                completedLines = card.completedLines().map { it.positions },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f),
+                cells = cells,
+                completedLines = completedLines,
+                modifier = Modifier.aspectRatio(1f),
             )
         }
     }

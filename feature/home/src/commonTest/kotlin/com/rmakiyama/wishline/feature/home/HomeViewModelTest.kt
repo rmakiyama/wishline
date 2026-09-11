@@ -2,6 +2,8 @@ package com.rmakiyama.wishline.feature.home
 
 import com.rmakiyama.wishline.domain.BingoCard
 import com.rmakiyama.wishline.domain.BingoCardId
+import com.rmakiyama.wishline.domain.BingoSlot
+import com.rmakiyama.wishline.domain.SlotStatus
 import com.rmakiyama.wishline.domain.Wish
 import com.rmakiyama.wishline.domain.WishId
 import com.rmakiyama.wishline.domain.WishStatus
@@ -19,6 +21,7 @@ import dev.mokkery.verify.VerifyMode.Companion.exactly
 import dev.mokkery.verify.VerifyMode.Companion.not
 import dev.mokkery.verifySuspend
 import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers
@@ -63,6 +66,29 @@ class HomeViewModelTest {
     @AfterTest
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `given the streams have not emitted, then the screen is not loaded`() = runTest(dispatcher) {
+        val vm = HomeViewModel(getOpenCards, getUnassigned, addWish, createCard)
+
+        vm.uiState.value.isLoaded.shouldBeFalse()
+    }
+
+    @Test
+    fun `given both streams have emitted, then the screen is loaded`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.uiState.value.isLoaded.shouldBeTrue()
+    }
+
+    @Test
+    fun `given open cards, then they are shown in stream order`() = runTest(dispatcher) {
+        val cards = listOf(card("c1"), card("c2"))
+        openCards.value = cards
+        val vm = viewModel()
+
+        vm.uiState.value.cards shouldBe cards
     }
 
     @Test
@@ -141,6 +167,16 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `given 24 wishes, when a card is created, then nothing happens`() = runTest(dispatcher) {
+        unassigned.value = wishes(24)
+        val vm = viewModel()
+
+        vm.onCreateCard()
+
+        verifySuspend(not) { createCard.invoke(any()) }
+    }
+
+    @Test
     fun `given 26 wishes, when a card is created, then nothing happens`() = runTest(dispatcher) {
         unassigned.value = wishes(26)
         val vm = viewModel()
@@ -179,6 +215,17 @@ class HomeViewModelTest {
         backgroundScope.launch { vm.uiState.collect {} }
         return vm
     }
+
+    private fun card(id: String): BingoCard = BingoCard(
+        id = BingoCardId(id),
+        number = 1,
+        label = null,
+        createdAt = Instant.fromEpochMilliseconds(0),
+        closedAt = null,
+        slots = wishes(BingoCard.SLOT_COUNT).mapIndexed { position, wish ->
+            BingoSlot(position = position, wish = wish, status = SlotStatus.Unmarked)
+        },
+    )
 
     private fun wishes(count: Int): List<Wish> = List(count) { index ->
         Wish(

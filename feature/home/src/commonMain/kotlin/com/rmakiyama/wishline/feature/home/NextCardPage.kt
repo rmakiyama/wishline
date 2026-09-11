@@ -112,9 +112,14 @@ private fun Header(
                     NextCardReadiness.Filling -> stringResource(
                         Res.string.home_next_card_progress,
                         count,
+                        BingoCard.SLOT_COUNT,
                         BingoCard.SLOT_COUNT - count,
                     )
-                    NextCardReadiness.Ready -> stringResource(Res.string.home_next_card_ready)
+                    NextCardReadiness.Ready -> stringResource(
+                        Res.string.home_next_card_ready,
+                        count,
+                        BingoCard.SLOT_COUNT,
+                    )
                     NextCardReadiness.Overflowing -> stringResource(Res.string.home_next_card_overflow, count)
                 },
                 style = WlTheme.typography.bodySmall,
