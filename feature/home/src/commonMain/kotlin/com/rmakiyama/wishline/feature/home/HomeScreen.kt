@@ -4,10 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -54,12 +52,7 @@ private fun HomeScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = WlTheme.spacing.m),
-            contentPadding = PaddingValues(
-                top = WlTheme.spacing.m,
-                bottom = WlTheme.spacing.m + WindowInsets.navigationBars
-                    .asPaddingValues()
-                    .calculateBottomPadding()
-            ),
+            contentPadding = PaddingValues(vertical = WlTheme.spacing.m),
             verticalArrangement = Arrangement.spacedBy(WlTheme.spacing.m),
         ) {
             items(uiState.wishes) { wish ->

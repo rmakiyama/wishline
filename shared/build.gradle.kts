@@ -15,6 +15,8 @@ kotlin {
             implementation(projects.core.navigation)
             implementation(projects.feature.home)
             implementation(projects.feature.onboarding)
+            implementation(projects.feature.pool)
+            implementation(projects.feature.archive)
             implementation(projects.usecase)
             implementation(projects.domain)
             implementation(projects.data)
