@@ -27,6 +27,18 @@ object WlIcons {
         moveTo(4.5f, 18f); lineTo(5.5f, 18f)
     }
 
+    val ArrowUp: ImageVector = strokeIcon("ArrowUp") {
+        moveTo(12f, 19f); lineTo(12f, 5f)
+        moveTo(6f, 11f); lineTo(12f, 5f); lineTo(18f, 11f)
+    }
+
+    /** An empty ring: a wish that is still planned. */
+    val Circle: ImageVector = strokeIcon("Circle") {
+        moveTo(20f, 12f)
+        arcTo(8f, 8f, 0f, isMoreThanHalf = true, isPositiveArc = true, x1 = 4f, y1 = 12f)
+        arcTo(8f, 8f, 0f, isMoreThanHalf = true, isPositiveArc = true, x1 = 20f, y1 = 12f)
+    }
+
     val Archive: ImageVector = strokeIcon("Archive") {
         roundedRect(3f, 4f, 18f, 5f, 1.5f)
         moveTo(5f, 9f); verticalLineTo(18f)
