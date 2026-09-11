@@ -1,16 +1,12 @@
 # data
 
-Repositories that turn stored records into domain types. Feature and usecase modules never see
-storage; `:shared` builds the database in its dependency graph.
+Repositories that turn stored records into domain types. Feature and usecase modules never see storage; `:shared` builds the database in its dependency graph.
 
 ## State and history
 
-Current state is read straight from its own tables, never derived from events: Home renders every
-slot of every open card, so that read has to stay a plain query.
+Current state is read straight from its own tables, never derived from events: Home renders every slot of every open card, so that read has to stay a plain query.
 
-`wish_status_change` and `wish_title_change` are append-only and keep every status and title a wish
-has had, including undone ones. Nothing reads them yet — they are there for a future history view
-and for analysis.
+`wish_status_change` and `wish_title_change` are append-only and keep every status and title a wish has had, including undone ones. Nothing reads them yet — they are there for a future history view and for analysis.
 
 - Changing a wish's status or title writes the event and updates the current state in one transaction
 - Cards have no event table. Creating, closing and relabelling a card touch only the card's own rows
@@ -18,8 +14,7 @@ and for analysis.
 
 ## What a closed card keeps
 
-Closing a card stops its slots from moving, so the marks it ended with are frozen. Everything else
-in a slot is read from the wish as it is today, including its title.
+Closing a card stops its slots from moving, so the marks it ended with are frozen. Everything else in a slot is read from the wish as it is today, including its title.
 
 ## SQLDelight
 

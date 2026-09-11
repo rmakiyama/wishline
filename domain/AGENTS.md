@@ -2,8 +2,7 @@
 
 Pure Kotlin model. No Android, no SQL, no framework types.
 
-A wish moves across several cards over time, so a card's slots are never removed. That is what lets
-a closed card still list what it was made of.
+A wish moves across several cards over time, so a card's slots are never removed. That is what lets a closed card still list what it was made of.
 
 ## Where an invariant belongs
 
