@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shown before Compose draws its first frame; keep equal to the theme's surface color. -->
+    <color name="window_background">#F6FFF6</color>
+</resources>
