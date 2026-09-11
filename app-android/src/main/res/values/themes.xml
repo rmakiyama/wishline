@@ -11,4 +11,14 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
+
+    <style name="Base.Theme.Wishline.Starting" parent="Theme.SplashScreen">
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
+    </style>
+
+    <style name="Theme.Wishline.Starting" parent="Base.Theme.Wishline.Starting">
+        <item name="windowSplashScreenBackground">@color/window_background</item>
+        <item name="postSplashScreenTheme">@style/Theme.Wishline</item>
+    </style>
 </resources>
