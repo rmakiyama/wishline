@@ -48,6 +48,6 @@ erDiagram
     }
 ```
 
-- テーブル間の関係は外部キーとして宣言していない。図の `FK` はクエリと Kotlin だけが守っている
+- 外部キーはすべて `ON DELETE RESTRICT`。SQLite は接続が求めたときだけ強制するので、各 `DatabaseDriverFactory` とテスト用ドライバで有効にしている
 - 時刻はすべてエポックミリ秒
 - `app_preference` はオンボーディング完了などのフラグを持つ KV テーブルで、ビンゴのモデルとは無関係

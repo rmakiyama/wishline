@@ -81,10 +81,6 @@ class SQLDelightWishRepository(
     override suspend fun delete(id: WishId) {
         withContext(Dispatchers.IO) {
             database.transaction {
-                val placed = slotQueries.countSlotsForWish(id.value).executeAsOne()
-                check(placed == 0L) {
-                    "Wish ${id.value} has been on a bingo card and cannot be deleted"
-                }
                 statusChangeQueries.deleteByWish(id.value)
                 titleChangeQueries.deleteByWish(id.value)
                 wishQueries.delete(id.value)

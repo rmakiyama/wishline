@@ -6,10 +6,12 @@ import com.rmakiyama.wishline.domain.BingoCardId
 import com.rmakiyama.wishline.domain.Wish
 import com.rmakiyama.wishline.domain.WishId
 import com.rmakiyama.wishline.domain.WishStatus
+import java.util.Properties
 import kotlin.time.Instant
 
 internal fun inMemoryDatabase(): WishlineDatabase {
-    val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+    val properties = Properties().apply { setProperty("foreign_keys", "true") }
+    val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY, properties)
     WishlineDatabase.Schema.create(driver)
     return WishlineDatabase(driver)
 }

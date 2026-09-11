@@ -1,7 +1,7 @@
 CREATE TABLE bingo_slot (
-    bingo_card_id TEXT NOT NULL,
+    bingo_card_id TEXT NOT NULL REFERENCES bingo_card(id) ON DELETE RESTRICT,
     position INTEGER NOT NULL,
-    wish_id TEXT NOT NULL,
+    wish_id TEXT NOT NULL REFERENCES wish(id) ON DELETE RESTRICT,
     marked_at INTEGER,
     PRIMARY KEY (bingo_card_id, position)
 );
@@ -20,9 +20,6 @@ countOpenSlotsForWishes:
 SELECT count(*) FROM bingo_slot
 JOIN bingo_card ON bingo_card.id = bingo_slot.bingo_card_id
 WHERE bingo_slot.wish_id IN ? AND bingo_card.closed_at IS NULL;
-
-countSlotsForWish:
-SELECT count(*) FROM bingo_slot WHERE wish_id = ?;
 
 updateMarkedAtOnOpenCard:
 UPDATE bingo_slot SET marked_at = ?

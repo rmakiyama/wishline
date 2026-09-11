@@ -110,7 +110,7 @@ class SQLDelightWishRepositoryTest {
     fun `given a wish that has been on a card, when it is deleted, then the delete fails`() = runTest {
         placeEveryWishOnAClosedCard()
 
-        assertFailsWith<IllegalStateException> { repository.delete(WishId("w0")) }
+        assertFailsWith<SQLException> { repository.delete(WishId("w0")) }
     }
 
     @Test

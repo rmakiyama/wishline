@@ -1,8 +1,8 @@
 CREATE TABLE wish_status_change (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    wish_id TEXT NOT NULL,
+    wish_id TEXT NOT NULL REFERENCES wish(id) ON DELETE RESTRICT,
     status TEXT NOT NULL,
-    bingo_card_id TEXT,
+    bingo_card_id TEXT REFERENCES bingo_card(id) ON DELETE RESTRICT,
     changed_at INTEGER NOT NULL
 );
 

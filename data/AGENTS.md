@@ -25,6 +25,7 @@ The schema diagram lives next to the `.sq` files, in `src/commonMain/sqldelight/
 - Test a flow by collecting across the change, not by reading again afterwards
 - `.sq` files compile against the `sqlite-3-18` dialect. Newer syntax fails to parse whatever the device supports
 - A partial index cannot reference another table, so a rule spanning tables belongs in Kotlin
+- Referential integrity is the database's job. Do not re-check a foreign key in Kotlin; a wish on a card cannot be deleted because the schema says so
 
 ## Schema changes
 
