@@ -48,7 +48,7 @@ erDiagram
     }
 ```
 
-- Every foreign key is `ON DELETE RESTRICT`. SQLite enforces them only when the connection asks, so each `DatabaseDriverFactory` and the test driver turn them on
-- Every id is a UUID generated on the device, events included, so rows from different devices never collide. Events are ordered by `changed_at`, then `rowid`
+- Every foreign key is `ON DELETE RESTRICT`. Nothing cascades
+- Ids are UUIDs as TEXT, events included, and carry no order. Events are ordered by `changed_at`, then `rowid`
 - Timestamps are epoch milliseconds
 - `app_preference` is a key-value table for flags such as onboarding completion; it is unrelated to the bingo model

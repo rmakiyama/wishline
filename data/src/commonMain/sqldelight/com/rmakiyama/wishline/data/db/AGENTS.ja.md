@@ -48,7 +48,7 @@ erDiagram
     }
 ```
 
-- 外部キーはすべて `ON DELETE RESTRICT`。SQLite は接続が求めたときだけ強制するので、各 `DatabaseDriverFactory` とテスト用ドライバで有効にしている
-- id はイベントも含めてすべて端末で生成する UUID。別の端末の行と衝突しない。イベントの並びは `changed_at`、同時刻なら `rowid`
+- 外部キーはすべて `ON DELETE RESTRICT`。CASCADE は無い
+- id はイベントも含めて TEXT の UUID で、順序は持たない。イベントの並びは `changed_at`、同時刻なら `rowid`
 - 時刻はすべてエポックミリ秒
 - `app_preference` はオンボーディング完了などのフラグを持つ KV テーブルで、ビンゴのモデルとは無関係
