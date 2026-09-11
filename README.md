@@ -54,6 +54,8 @@ graph TD
     app-ios --> shared
 
     shared --> feature:home
+    shared --> feature:pool
+    shared --> feature:archive
     shared --> core:ui
     shared --> core:navigation
     shared --> usecase

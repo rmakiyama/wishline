@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tab_home">HOME</string>
+    <string name="tab_pool">プール</string>
+    <string name="tab_archive">アーカイブ</string>
+</resources>
