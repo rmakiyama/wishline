@@ -26,8 +26,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.rmakiyama.wishline.core.ui.component.WishSheet
+import com.rmakiyama.wishline.core.ui.component.WishSheetPlace
+import com.rmakiyama.wishline.core.ui.component.WishSheetStatus
 import com.rmakiyama.wishline.designsystem.component.WlAppBar
 import com.rmakiyama.wishline.designsystem.theme.WlTheme
+import com.rmakiyama.wishline.domain.BingoCardId
+import com.rmakiyama.wishline.domain.Wish
+import com.rmakiyama.wishline.domain.WishStatus
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
 
@@ -44,8 +50,35 @@ fun HomeScreen(
         onAddWish = viewModel::onAddWish,
         onCreateCard = viewModel::onCreateCard,
         onCreatedCardShown = viewModel::onCreatedCardShown,
+        onFlipCard = viewModel::onFlipCard,
+        onWishClick = viewModel::onWishClick,
         modifier = modifier,
     )
+
+    val sheet = uiState.sheet
+    if (sheet != null) {
+        WishSheet(
+            title = sheet.wish.title,
+            place = when (val place = sheet.place) {
+                WishPlace.NextCard -> WishSheetPlace.NextCard
+                is WishPlace.Card -> WishSheetPlace.Card(place.number)
+            },
+            status = when (sheet.wish.status) {
+                is WishStatus.Planned -> WishSheetStatus.Planned
+                is WishStatus.Done -> WishSheetStatus.Done
+                is WishStatus.Someday -> WishSheetStatus.Someday
+            },
+            actions = sheet.actions,
+            isEditingTitle = sheet.isEditingTitle,
+            titleInput = sheet.titleInput,
+            onDismiss = viewModel::onDismissSheet,
+            onStartEditTitle = viewModel::onStartEditTitle,
+            onTitleInputChange = viewModel::onTitleInputChange,
+            onSaveTitle = viewModel::onSaveTitle,
+            onCancelEditTitle = viewModel::onCancelEditTitle,
+            onAction = viewModel::onWishAction,
+        )
+    }
 }
 
 @Composable
@@ -55,6 +88,8 @@ private fun HomeScreen(
     onAddWish: () -> Unit,
     onCreateCard: () -> Unit,
     onCreatedCardShown: () -> Unit,
+    onFlipCard: (BingoCardId) -> Unit,
+    onWishClick: (Wish, WishPlace) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -99,13 +134,19 @@ private fun HomeScreen(
             ) { page ->
                 val card = uiState.cards.getOrNull(page)
                 if (card != null) {
-                    BingoCardPage(card = card)
+                    BingoCardPage(
+                        card = card,
+                        isFlipped = card.id in uiState.flippedCardIds,
+                        onFlip = { onFlipCard(card.id) },
+                        onSlotClick = { slot -> onWishClick(slot.wish, WishPlace.Card(card.id, card.number)) },
+                    )
                 } else {
                     NextCardPage(
                         uiState = uiState.nextCard,
                         onInputChange = onInputChange,
                         onAddWish = onAddWish,
                         onCreateCard = onCreateCard,
+                        onWishClick = { wish -> onWishClick(wish, WishPlace.NextCard) },
                     )
                 }
             }
