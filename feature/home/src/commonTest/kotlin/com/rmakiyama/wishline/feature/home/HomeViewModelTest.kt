@@ -300,6 +300,60 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `given an open sheet, when someday is chosen, then the wish is marked someday`() = runTest(dispatcher) {
+        val wish = wishes(1).first()
+        val vm = viewModel()
+        vm.onWishClick(wish, onCard)
+
+        vm.onWishAction(WishAction.Someday)
+
+        verifySuspend(exactly(1)) { markSomeday.invoke(wish.id) }
+    }
+
+    @Test
+    fun `given a someday wish, when restore is chosen, then the wish returns to planned`() = runTest(dispatcher) {
+        val wish = wish(WishStatus.Someday(now))
+        val vm = viewModel()
+        vm.onWishClick(wish, onCard)
+
+        vm.onWishAction(WishAction.Restore)
+
+        verifySuspend(exactly(1)) { restore.invoke(wish.id) }
+    }
+
+    @Test
+    fun `given a wish on the next card, when delete is chosen, then the wish is deleted`() = runTest(dispatcher) {
+        val wish = wishes(1).first()
+        val vm = viewModel()
+        vm.onWishClick(wish, WishPlace.NextCard)
+
+        vm.onWishAction(WishAction.Delete)
+
+        verifySuspend(exactly(1)) { delete.invoke(wish.id) }
+    }
+
+    @Test
+    fun `given a planned wish on a card, when delete is chosen, then nothing happens`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onWishClick(wishes(1).first(), onCard)
+
+        vm.onWishAction(WishAction.Delete)
+
+        verifySuspend(not) { delete.invoke(any()) }
+    }
+
+    @Test
+    fun `given deleting fails, when delete is chosen, then the screen keeps working`() = runTest(dispatcher) {
+        everySuspend { delete.invoke(any()) } throws IllegalStateException("still on a card")
+        val vm = viewModel()
+        vm.onWishClick(wishes(1).first(), WishPlace.NextCard)
+
+        vm.onWishAction(WishAction.Delete)
+
+        vm.uiState.value.sheet.shouldBeNull()
+    }
+
+    @Test
     fun `given a done wish, when undo is chosen, then the wish returns to planned`() = runTest(dispatcher) {
         val wish = wish(WishStatus.Done(now))
         val vm = viewModel()

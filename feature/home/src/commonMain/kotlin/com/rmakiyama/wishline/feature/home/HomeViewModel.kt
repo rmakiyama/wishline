@@ -135,7 +135,7 @@ class HomeViewModel(
         if (title.isEmpty()) return
         _uiState.update { it.copy(sheet = null) }
         viewModelScope.launch {
-            changeWishTitleUseCase(sheet.wish.id, title)
+            runCatching { changeWishTitleUseCase(sheet.wish.id, title) }
         }
     }
 
@@ -146,12 +146,15 @@ class HomeViewModel(
         _uiState.update { it.copy(sheet = null) }
         viewModelScope.launch {
             val id = sheet.wish.id
-            when (action) {
-                WishAction.Achieve -> markWishDoneUseCase(id)
-                WishAction.UndoAchieve -> restoreWishUseCase(id)
-                WishAction.Someday -> markWishSomedayUseCase(id)
-                WishAction.Restore -> restoreWishUseCase(id)
-                WishAction.Delete -> deleteWishUseCase(id)
+            // A failed write leaves the wish as it was; the streams keep showing the truth.
+            runCatching {
+                when (action) {
+                    WishAction.Achieve -> markWishDoneUseCase(id)
+                    WishAction.UndoAchieve -> restoreWishUseCase(id)
+                    WishAction.Someday -> markWishSomedayUseCase(id)
+                    WishAction.Restore -> restoreWishUseCase(id)
+                    WishAction.Delete -> deleteWishUseCase(id)
+                }
             }
         }
     }
