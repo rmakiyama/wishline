@@ -39,6 +39,25 @@ object WlIcons {
         arcTo(8f, 8f, 0f, isMoreThanHalf = true, isPositiveArc = true, x1 = 20f, y1 = 12f)
     }
 
+    val Check: ImageVector = strokeIcon("Check") {
+        moveTo(5f, 12f); lineTo(10f, 17f); lineTo(19f, 7f)
+    }
+
+    val Pencil: ImageVector = strokeIcon("Pencil") {
+        moveTo(4f, 20f); horizontalLineTo(8f); lineTo(18f, 10f); lineTo(14f, 6f); lineTo(4f, 16f); verticalLineTo(20f)
+        close()
+        moveTo(12.5f, 7.5f); lineTo(16.5f, 11.5f)
+    }
+
+    /** Two arrows crossing a small square: turn the card over. */
+    val Flip: ImageVector = strokeIcon("Flip") {
+        moveTo(4f, 8f); verticalLineTo(4f); horizontalLineTo(8f)
+        moveTo(20f, 16f); verticalLineTo(20f); horizontalLineTo(16f)
+        moveTo(4f, 4f); lineTo(10f, 10f)
+        moveTo(20f, 20f); lineTo(14f, 14f)
+        roundedRect(9f, 9f, 6f, 6f, 1.5f)
+    }
+
     val Archive: ImageVector = strokeIcon("Archive") {
         roundedRect(3f, 4f, 18f, 5f, 1.5f)
         moveTo(5f, 9f); verticalLineTo(18f)
