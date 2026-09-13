@@ -1,9 +1,11 @@
 package com.rmakiyama.wishline.data
 
+import app.cash.turbine.test
 import com.rmakiyama.wishline.domain.BingoCardLayout
+import com.rmakiyama.wishline.domain.Wish
 import io.kotest.matchers.booleans.shouldBeFalse
-import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -17,26 +19,61 @@ class SQLDelightWishQueriesTest {
 
     @Test
     fun `given wishes added in order, when listing the next card, then they keep that order`() = runTest {
-        wishRepository.add(wishes(3))
+        givenWishes(3)
 
         queries.getUnassignedWishesStream().first().map { it.wish.id.value } shouldContainExactly
             listOf("w0", "w1", "w2")
     }
 
     @Test
+    fun `given a wish on an open card, when listing the next card, then it is not offered`() = runTest {
+        val placed = givenWishes(26)
+
+        givenAnOpenCard("c1", placed.take(25))
+
+        queries.getUnassignedWishesStream().first().map { it.wish.id.value } shouldContainExactly
+            listOf("w25")
+    }
+
+    @Test
     fun `given a wish that was never placed, when listing the next card, then it has not been on a card`() = runTest {
-        wishRepository.add(wishes(1))
+        givenWishes(1)
 
         queries.getUnassignedWishesStream().first().single().hasBeenOnCard.shouldBeFalse()
     }
 
     @Test
-    fun `given a wish returned from a closed card, when listing the next card, then it has been on a card`() = runTest {
-        val placed = wishes(25)
-        wishRepository.add(placed)
-        cardRepository.create(cardId("c1"), BingoCardLayout.of(placed), at(2))
+    fun `given wishes back from a closed card next to a new one, when listing the next card, then only the returned ones have been on a card`() = runTest {
+        val placed = givenWishes(26)
+        givenAnOpenCard("c1", placed.take(25))
         cardRepository.close(cardId("c1"), at(3))
 
-        queries.getUnassignedWishesStream().first().all { it.hasBeenOnCard }.shouldBeTrue()
+        val onCard = queries.getUnassignedWishesStream().first()
+            .filter { it.hasBeenOnCard }
+            .map { it.wish.id.value }
+
+        onCard shouldContainExactly placed.take(25).map { it.id.value }
+    }
+
+    @Test
+    fun `given the next card is observed, when a card is closed, then it emits again`() = runTest {
+        val placed = givenWishes(25)
+        givenAnOpenCard("c1", placed)
+
+        queries.getUnassignedWishesStream().test {
+            awaitItem() shouldBe emptyList()
+
+            cardRepository.close(cardId("c1"), at(3))
+
+            awaitItem().map { it.wish.id.value } shouldContainExactly placed.map { it.id.value }
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    private suspend fun givenWishes(count: Int): List<Wish> =
+        wishes(count).also { wishRepository.add(it) }
+
+    private suspend fun givenAnOpenCard(id: String, placed: List<Wish>) {
+        cardRepository.create(cardId(id), BingoCardLayout.of(placed), at(2))
     }
 }

@@ -242,6 +242,25 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `given a wish on the next card that has been on a card, when it is opened, then it offers achieve and someday`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onWishClick(wishes(1).first(), WishPlace.NextCard(hasBeenOnCard = true))
+
+        vm.uiState.value.sheet?.actions shouldBe listOf(WishAction.Achieve, WishAction.Someday)
+    }
+
+    @Test
+    fun `given a wish on the next card that has been on a card, when delete is chosen, then nothing happens`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onWishClick(wishes(1).first(), WishPlace.NextCard(hasBeenOnCard = true))
+
+        vm.onWishAction(WishAction.Delete)
+
+        verifySuspend(not) { delete.invoke(any()) }
+    }
+
+    @Test
     fun `given a planned wish on a card, when it is opened, then it offers achieve and someday`() = runTest(dispatcher) {
         val vm = viewModel()
 
@@ -298,15 +317,6 @@ class HomeViewModelTest {
         vm.onWishAction(WishAction.Delete)
 
         verifySuspend(not) { delete.invoke(any()) }
-    }
-
-    @Test
-    fun `given a wish on the next card that has been on a card, then the sheet offers no delete`() = runTest(dispatcher) {
-        val vm = viewModel()
-
-        vm.onWishClick(wishes(1).first(), WishPlace.NextCard(hasBeenOnCard = true))
-
-        vm.uiState.value.sheet?.actions shouldBe listOf(WishAction.Achieve, WishAction.Someday)
     }
 
     @Test
