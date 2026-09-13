@@ -15,13 +15,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,11 +76,18 @@ internal fun BingoCardPage(
     isFlipped: Boolean,
     onFlip: () -> Unit,
     onSlotClick: (BingoSlot) -> Unit,
+    onCloseClick: () -> Unit,
+    onEditLabelClick: () -> Unit,
 ) {
     // Sorted so that index equals position: the grid's lines and cell taps both address cells by position.
     val slots = remember(card) { card.slots.sortedBy { it.position } }
     CardFrame {
-        CardHeader(card = card, onFlip = onFlip)
+        CardHeader(
+            card = card,
+            onFlip = onFlip,
+            onCloseClick = onCloseClick,
+            onEditLabelClick = onEditLabelClick,
+        )
         if (isFlipped) {
             CardBack(slots = slots, onSlotClick = onSlotClick)
         } else {
@@ -84,10 +97,16 @@ internal fun BingoCardPage(
 }
 
 @Composable
-private fun CardHeader(card: BingoCard, onFlip: () -> Unit) {
+private fun CardHeader(
+    card: BingoCard,
+    onFlip: () -> Unit,
+    onCloseClick: () -> Unit,
+    onEditLabelClick: () -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(WlTheme.spacing.xs),
     ) {
         Column(
             modifier = Modifier
@@ -106,6 +125,7 @@ private fun CardHeader(card: BingoCard, onFlip: () -> Unit) {
                 color = WlTheme.colorScheme.onSurfaceVariant,
             )
         }
+        CardMenu(onCloseClick = onCloseClick, onEditLabelClick = onEditLabelClick)
         FilledIconButton(
             onClick = onFlip,
             modifier = Modifier.size(48.dp),
@@ -116,6 +136,36 @@ private fun CardHeader(card: BingoCard, onFlip: () -> Unit) {
             ),
         ) {
             Icon(WlIcons.Flip, contentDescription = stringResource(Res.string.home_flip))
+        }
+    }
+}
+
+@Composable
+private fun CardMenu(onCloseClick: () -> Unit, onEditLabelClick: () -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(
+                WlIcons.More,
+                contentDescription = stringResource(Res.string.home_card_menu),
+                tint = WlTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.home_menu_edit_label)) },
+                onClick = {
+                    expanded = false
+                    onEditLabelClick()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(Res.string.home_menu_close)) },
+                onClick = {
+                    expanded = false
+                    onCloseClick()
+                },
+            )
         }
     }
 }

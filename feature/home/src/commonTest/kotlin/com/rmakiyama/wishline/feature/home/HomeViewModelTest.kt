@@ -10,6 +10,8 @@ import com.rmakiyama.wishline.domain.WishId
 import com.rmakiyama.wishline.domain.WishStatus
 import com.rmakiyama.wishline.core.ui.component.WishAction
 import com.rmakiyama.wishline.usecase.AddWishUseCase
+import com.rmakiyama.wishline.usecase.ChangeBingoCardLabelUseCase
+import com.rmakiyama.wishline.usecase.CloseBingoCardUseCase
 import com.rmakiyama.wishline.usecase.ChangeWishTitleUseCase
 import com.rmakiyama.wishline.usecase.DeleteWishUseCase
 import com.rmakiyama.wishline.usecase.MarkWishDoneUseCase
@@ -69,6 +71,8 @@ class HomeViewModelTest {
     private val markSomeday = mock<MarkWishSomedayUseCase>(MockMode.autoUnit)
     private val restore = mock<RestoreWishUseCase>(MockMode.autoUnit)
     private val delete = mock<DeleteWishUseCase>(MockMode.autoUnit)
+    private val closeCard = mock<CloseBingoCardUseCase>(MockMode.autoUnit)
+    private val changeLabel = mock<ChangeBingoCardLabelUseCase>(MockMode.autoUnit)
 
     @BeforeTest
     fun setUp() {
@@ -422,6 +426,75 @@ class HomeViewModelTest {
     private val now = Instant.fromEpochMilliseconds(0)
     private val onCard = WishPlace.Card(BingoCardId("c1"), number = 1)
 
+    @Test
+    fun `given a card, when close is chosen, then the confirmation shows how many wishes go back`() = runTest(dispatcher) {
+        val card = card("c1")
+        openCards.value = listOf(card)
+        val vm = viewModel()
+
+        vm.onCloseCardClick(card)
+
+        (vm.uiState.value.cardDialog as CardDialog.CloseConfirm).plannedCount shouldBe 25
+    }
+
+    @Test
+    fun `given the close confirmation, when it is confirmed, then the card is closed`() = runTest(dispatcher) {
+        val card = card("c1")
+        val vm = viewModel()
+        vm.onCloseCardClick(card)
+
+        vm.onConfirmClose()
+
+        verifySuspend(exactly(1)) { closeCard.invoke(card.id) }
+        vm.uiState.value.cardDialog.shouldBeNull()
+    }
+
+    @Test
+    fun `given the close confirmation, when it is dismissed, then the card stays open`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onCloseCardClick(card("c1"))
+
+        vm.onDismissCardDialog()
+
+        verifySuspend(not) { closeCard.invoke(any()) }
+    }
+
+    @Test
+    fun `given a card, when the label is saved, then the card gets that label`() = runTest(dispatcher) {
+        val card = card("c1")
+        val vm = viewModel()
+        vm.onEditLabelClick(card)
+
+        vm.onLabelInputChange("2026 夏")
+        vm.onSaveLabel()
+
+        verifySuspend(exactly(1)) { changeLabel.invoke(card.id, "2026 夏") }
+    }
+
+    @Test
+    fun `given a card with one slot left, when that wish is achieved, then the card closes on its own`() = runTest(dispatcher) {
+        val card = card("c1", "w0")
+        openCards.value = listOf(card)
+        val vm = viewModel()
+        vm.onWishClick(card.slots.first { it.wish.id == WishId("w0") }.wish, WishPlace.Card(card.id, card.number))
+
+        vm.onWishAction(WishAction.Achieve)
+
+        verifySuspend(exactly(1)) { closeCard.invoke(card.id) }
+    }
+
+    @Test
+    fun `given a card with two slots left, when one wish is achieved, then the card stays open`() = runTest(dispatcher) {
+        val card = card("c1", "w0", "w1")
+        openCards.value = listOf(card)
+        val vm = viewModel()
+        vm.onWishClick(card.slots.first { it.wish.id == WishId("w0") }.wish, WishPlace.Card(card.id, card.number))
+
+        vm.onWishAction(WishAction.Achieve)
+
+        verifySuspend(not) { closeCard.invoke(any()) }
+    }
+
     private fun viewModel() = HomeViewModel(
         getOpenCards,
         getUnassigned,
@@ -432,18 +505,26 @@ class HomeViewModelTest {
         markSomeday,
         restore,
         delete,
+        closeCard,
+        changeLabel,
     )
 
     private fun wish(status: WishStatus): Wish = wishes(1).first().copy(status = status)
 
-    private fun card(id: String): BingoCard = BingoCard(
+    /** With [markedExcept] given, every slot is marked but those wishes. */
+    private fun card(id: String, vararg markedExcept: String): BingoCard = BingoCard(
         id = BingoCardId(id),
         number = 1,
         label = null,
         createdAt = Instant.fromEpochMilliseconds(0),
         closedAt = null,
         slots = wishes(BingoCard.SLOT_COUNT).mapIndexed { position, wish ->
-            BingoSlot(position = position, wish = wish, status = SlotStatus.Unmarked)
+            val marked = markedExcept.isNotEmpty() && wish.id.value !in markedExcept
+            BingoSlot(
+                position = position,
+                wish = wish,
+                status = if (marked) SlotStatus.Marked(now) else SlotStatus.Unmarked,
+            )
         },
     )
 

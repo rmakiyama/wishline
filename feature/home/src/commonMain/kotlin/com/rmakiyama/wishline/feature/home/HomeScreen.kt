@@ -31,6 +31,7 @@ import com.rmakiyama.wishline.core.ui.component.WishSheetPlace
 import com.rmakiyama.wishline.core.ui.component.WishSheetStatus
 import com.rmakiyama.wishline.designsystem.component.WlAppBar
 import com.rmakiyama.wishline.designsystem.theme.WlTheme
+import com.rmakiyama.wishline.domain.BingoCard
 import com.rmakiyama.wishline.domain.BingoCardId
 import com.rmakiyama.wishline.domain.Wish
 import com.rmakiyama.wishline.domain.WishStatus
@@ -52,8 +53,25 @@ fun HomeScreen(
         onCreatedCardShown = viewModel::onCreatedCardShown,
         onFlipCard = viewModel::onFlipCard,
         onWishClick = viewModel::onWishClick,
+        onCloseCardClick = viewModel::onCloseCardClick,
+        onEditLabelClick = viewModel::onEditLabelClick,
         modifier = modifier,
     )
+
+    when (val dialog = uiState.cardDialog) {
+        is CardDialog.CloseConfirm -> CloseCardSheet(
+            dialog = dialog,
+            onConfirm = viewModel::onConfirmClose,
+            onDismiss = viewModel::onDismissCardDialog,
+        )
+        is CardDialog.EditLabel -> EditLabelDialog(
+            dialog = dialog,
+            onInputChange = viewModel::onLabelInputChange,
+            onSave = viewModel::onSaveLabel,
+            onDismiss = viewModel::onDismissCardDialog,
+        )
+        null -> Unit
+    }
 
     val sheet = uiState.sheet
     if (sheet != null) {
@@ -90,6 +108,8 @@ private fun HomeScreen(
     onCreatedCardShown: () -> Unit,
     onFlipCard: (BingoCardId) -> Unit,
     onWishClick: (Wish, WishPlace) -> Unit,
+    onCloseCardClick: (BingoCard) -> Unit,
+    onEditLabelClick: (BingoCard) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -139,6 +159,8 @@ private fun HomeScreen(
                         isFlipped = card.id in uiState.flippedCardIds,
                         onFlip = { onFlipCard(card.id) },
                         onSlotClick = { slot -> onWishClick(slot.wish, WishPlace.Card(card.id, card.number)) },
+                        onCloseClick = { onCloseCardClick(card) },
+                        onEditLabelClick = { onEditLabelClick(card) },
                     )
                 } else {
                     NextCardPage(
