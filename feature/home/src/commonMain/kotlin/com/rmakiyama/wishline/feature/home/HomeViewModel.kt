@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.rmakiyama.wishline.core.ui.component.WishAction
 import com.rmakiyama.wishline.domain.BingoCard
 import com.rmakiyama.wishline.domain.BingoCardId
+import com.rmakiyama.wishline.domain.UnassignedWish
 import com.rmakiyama.wishline.domain.Wish
 import com.rmakiyama.wishline.domain.WishStatus
 import com.rmakiyama.wishline.usecase.AddWishUseCase
@@ -85,7 +86,7 @@ class HomeViewModel(
         _uiState.update { it.copy(nextCard = it.nextCard.copy(isCreating = true)) }
         viewModelScope.launch {
             try {
-                val id = createBingoCardUseCase(nextCard.wishes)
+                val id = createBingoCardUseCase(nextCard.wishes.map { it.wish })
                 _uiState.update { it.copy(createdCardId = id) }
             } catch (e: Exception) {
                 // The next card stays as it was, so the user can simply try again.
@@ -179,7 +180,7 @@ data class HomeUiState(
 }
 
 data class NextCardUiState(
-    val wishes: List<Wish> = emptyList(),
+    val wishes: List<UnassignedWish> = emptyList(),
     val input: String = "",
     val isCreating: Boolean = false,
 ) {
@@ -194,7 +195,7 @@ data class NextCardUiState(
 enum class NextCardReadiness { Filling, Ready, Overflowing }
 
 sealed interface WishPlace {
-    data object NextCard : WishPlace
+    data class NextCard(val hasBeenOnCard: Boolean) : WishPlace
     data class Card(val id: BingoCardId, val number: Int) : WishPlace
 }
 
@@ -211,7 +212,11 @@ data class WishSheetState(
     /** A wish on the next card is always planned, so its place alone decides. */
     val actions: List<WishAction>
         get() = when (place) {
-            WishPlace.NextCard -> listOf(WishAction.Achieve, WishAction.Someday, WishAction.Delete)
+            is WishPlace.NextCard -> buildList {
+                add(WishAction.Achieve)
+                add(WishAction.Someday)
+                if (!place.hasBeenOnCard) add(WishAction.Delete)
+            }
             is WishPlace.Card -> when (wish.status) {
                 is WishStatus.Planned -> listOf(WishAction.Achieve, WishAction.Someday)
                 is WishStatus.Done -> listOf(WishAction.UndoAchieve)
