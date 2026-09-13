@@ -39,6 +39,27 @@ class BingoCardTest {
         card.completedLines().size shouldBe BingoLine.All.size
     }
 
+    @Test
+    fun `given one unmarked slot, when its wish would be marked, then the card is completed`() {
+        val card = card(marked = (1 until BingoCard.SLOT_COUNT).toSet())
+
+        card.isCompletedByMarking(WishId("wish-0")) shouldBe true
+    }
+
+    @Test
+    fun `given two unmarked slots, when one wish would be marked, then the card is not completed`() {
+        val card = card(marked = (2 until BingoCard.SLOT_COUNT).toSet())
+
+        card.isCompletedByMarking(WishId("wish-0")) shouldBe false
+    }
+
+    @Test
+    fun `given a someday slot beside the last unmarked one, when that wish would be marked, then the card is not completed`() {
+        val card = card(marked = (2 until BingoCard.SLOT_COUNT).toSet(), someday = setOf(1))
+
+        card.isCompletedByMarking(WishId("wish-0")) shouldBe false
+    }
+
     private fun card(marked: Set<Int>, someday: Set<Int> = emptySet()): BingoCard {
         val at = Instant.fromEpochMilliseconds(0)
         return BingoCard(

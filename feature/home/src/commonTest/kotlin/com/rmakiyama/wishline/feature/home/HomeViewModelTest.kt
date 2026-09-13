@@ -446,7 +446,26 @@ class HomeViewModelTest {
         vm.onConfirmClose()
 
         verifySuspend(exactly(1)) { closeCard.invoke(card.id) }
+    }
+
+    @Test
+    fun `given the close confirmation, when it is confirmed, then the confirmation goes away`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onCloseCardClick(card("c1"))
+
+        vm.onConfirmClose()
+
         vm.uiState.value.cardDialog.shouldBeNull()
+    }
+
+    @Test
+    fun `given a card with a someday slot, when close is chosen, then that slot is not counted as going back`() = runTest(dispatcher) {
+        val card = card("c1").withSomeday("w0")
+        val vm = viewModel()
+
+        vm.onCloseCardClick(card)
+
+        (vm.uiState.value.cardDialog as CardDialog.CloseConfirm).plannedCount shouldBe 24
     }
 
     @Test
@@ -472,6 +491,18 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `given a label with spaces around it, when it is saved, then it is saved trimmed`() = runTest(dispatcher) {
+        val card = card("c1")
+        val vm = viewModel()
+        vm.onEditLabelClick(card)
+
+        vm.onLabelInputChange("  2026 夏 ")
+        vm.onSaveLabel()
+
+        verifySuspend(exactly(1)) { changeLabel.invoke(card.id, "2026 夏") }
+    }
+
+    @Test
     fun `given a card with one slot left, when that wish is achieved, then the card closes on its own`() = runTest(dispatcher) {
         val card = card("c1", "w0")
         openCards.value = listOf(card)
@@ -481,6 +512,18 @@ class HomeViewModelTest {
         vm.onWishAction(WishAction.Achieve)
 
         verifySuspend(exactly(1)) { closeCard.invoke(card.id) }
+    }
+
+    @Test
+    fun `given a card whose only other open slot is someday, when the last planned wish is achieved, then the card stays open`() = runTest(dispatcher) {
+        val card = card("c1", "w0", "w1").withSomeday("w1")
+        openCards.value = listOf(card)
+        val vm = viewModel()
+        vm.onWishClick(card.slots.first { it.wish.id == WishId("w0") }.wish, WishPlace.Card(card.id, card.number))
+
+        vm.onWishAction(WishAction.Achieve)
+
+        verifySuspend(not) { closeCard.invoke(any()) }
     }
 
     @Test
@@ -530,6 +573,12 @@ class HomeViewModelTest {
 
     private fun unassigned(count: Int): List<UnassignedWish> =
         wishes(count).map { UnassignedWish(it, hasBeenOnCard = false) }
+
+    private fun BingoCard.withSomeday(wishId: String): BingoCard = copy(
+        slots = slots.map { slot ->
+            if (slot.wish.id.value == wishId) slot.copy(wish = slot.wish.copy(status = WishStatus.Someday(now))) else slot
+        },
+    )
 
     private fun wishes(count: Int): List<Wish> = List(count) { index ->
         Wish(

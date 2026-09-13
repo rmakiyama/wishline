@@ -167,19 +167,22 @@ class HomeViewModel(
     private suspend fun closeIfCompleted(place: WishPlace, marked: WishId) {
         val cardId = (place as? WishPlace.Card)?.id ?: return
         val card = _uiState.value.cards.firstOrNull { it.id == cardId } ?: return
-        val completed = card.slots.all { it.status is SlotStatus.Marked || it.wish.id == marked }
-        if (completed) closeBingoCardUseCase(cardId)
+        if (card.isCompletedByMarking(marked)) closeCard(cardId)
     }
 
     fun onCloseCardClick(card: BingoCard) {
         _uiState.update { it.copy(cardDialog = CardDialog.CloseConfirm(card)) }
     }
 
-    // TODO: アーカイブ詳細ができたら、クローズ後にそこへ遷移する
     fun onConfirmClose() {
         val dialog = _uiState.value.cardDialog as? CardDialog.CloseConfirm ?: return
         _uiState.update { it.copy(cardDialog = null) }
-        write { closeBingoCardUseCase(dialog.card.id) }
+        write { closeCard(dialog.card.id) }
+    }
+
+    // TODO: Move to the archive detail once it exists; until then the carousel just moves on.
+    private suspend fun closeCard(id: BingoCardId) {
+        closeBingoCardUseCase(id)
     }
 
     fun onEditLabelClick(card: BingoCard) {
@@ -196,7 +199,7 @@ class HomeViewModel(
     fun onSaveLabel() {
         val dialog = _uiState.value.cardDialog as? CardDialog.EditLabel ?: return
         _uiState.update { it.copy(cardDialog = null) }
-        write { changeBingoCardLabelUseCase(dialog.card.id, dialog.input) }
+        write { changeBingoCardLabelUseCase(dialog.card.id, dialog.input.trim()) }
     }
 
     fun onDismissCardDialog() {

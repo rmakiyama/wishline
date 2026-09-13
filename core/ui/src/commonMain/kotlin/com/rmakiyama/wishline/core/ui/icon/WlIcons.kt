@@ -39,7 +39,7 @@ object WlIcons {
         arcTo(8f, 8f, 0f, isMoreThanHalf = true, isPositiveArc = true, x1 = 20f, y1 = 12f)
     }
 
-    /** Three dots; each is a zero-length stroke that the round cap turns into a dot. */
+    /** Three dots: each is a 0.01 long stroke whose round cap gives it its size. */
     val More: ImageVector = strokeIcon("More") {
         moveTo(12f, 5f); lineTo(12f, 5.01f)
         moveTo(12f, 12f); lineTo(12f, 12.01f)
