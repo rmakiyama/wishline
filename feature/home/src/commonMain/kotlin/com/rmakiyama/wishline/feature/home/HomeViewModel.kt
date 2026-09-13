@@ -2,13 +2,20 @@ package com.rmakiyama.wishline.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rmakiyama.wishline.core.ui.component.WishAction
 import com.rmakiyama.wishline.domain.BingoCard
 import com.rmakiyama.wishline.domain.BingoCardId
 import com.rmakiyama.wishline.domain.Wish
+import com.rmakiyama.wishline.domain.WishStatus
 import com.rmakiyama.wishline.usecase.AddWishUseCase
+import com.rmakiyama.wishline.usecase.ChangeWishTitleUseCase
 import com.rmakiyama.wishline.usecase.CreateBingoCardUseCase
+import com.rmakiyama.wishline.usecase.DeleteWishUseCase
 import com.rmakiyama.wishline.usecase.GetOpenBingoCardsStreamUseCase
 import com.rmakiyama.wishline.usecase.GetUnassignedWishesStreamUseCase
+import com.rmakiyama.wishline.usecase.MarkWishDoneUseCase
+import com.rmakiyama.wishline.usecase.MarkWishSomedayUseCase
+import com.rmakiyama.wishline.usecase.RestoreWishUseCase
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -27,6 +34,11 @@ class HomeViewModel(
     private val getUnassignedWishesStream: GetUnassignedWishesStreamUseCase,
     private val addWishUseCase: AddWishUseCase,
     private val createBingoCardUseCase: CreateBingoCardUseCase,
+    private val changeWishTitleUseCase: ChangeWishTitleUseCase,
+    private val markWishDoneUseCase: MarkWishDoneUseCase,
+    private val markWishSomedayUseCase: MarkWishSomedayUseCase,
+    private val restoreWishUseCase: RestoreWishUseCase,
+    private val deleteWishUseCase: DeleteWishUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -86,6 +98,70 @@ class HomeViewModel(
     fun onCreatedCardShown() {
         _uiState.update { it.copy(createdCardId = null) }
     }
+
+    fun onFlipCard(id: BingoCardId) {
+        _uiState.update {
+            val flipped = if (id in it.flippedCardIds) it.flippedCardIds - id else it.flippedCardIds + id
+            it.copy(flippedCardIds = flipped)
+        }
+    }
+
+    fun onWishClick(wish: Wish, place: WishPlace) {
+        _uiState.update { it.copy(sheet = WishSheetState(wish = wish, place = place)) }
+    }
+
+    fun onDismissSheet() {
+        _uiState.update { it.copy(sheet = null) }
+    }
+
+    fun onStartEditTitle() {
+        _uiState.update { state ->
+            state.copy(sheet = state.sheet?.let { it.copy(isEditingTitle = true, titleInput = it.wish.title) })
+        }
+    }
+
+    fun onTitleInputChange(value: String) {
+        _uiState.update { state -> state.copy(sheet = state.sheet?.copy(titleInput = value)) }
+    }
+
+    fun onCancelEditTitle() {
+        _uiState.update { state -> state.copy(sheet = state.sheet?.copy(isEditingTitle = false)) }
+    }
+
+    fun onSaveTitle() {
+        val sheet = _uiState.value.sheet ?: return
+        val title = sheet.titleInput.trim()
+        if (title.isEmpty()) return
+        _uiState.update { it.copy(sheet = null) }
+        write { changeWishTitleUseCase(sheet.wish.id, title) }
+    }
+
+    /** Ignores an action the sheet does not offer, so a stale tap cannot move a wish the wrong way. */
+    fun onWishAction(action: WishAction) {
+        val sheet = _uiState.value.sheet ?: return
+        if (action !in sheet.actions) return
+        _uiState.update { it.copy(sheet = null) }
+        val id = sheet.wish.id
+        write {
+            when (action) {
+                WishAction.Achieve -> markWishDoneUseCase(id)
+                WishAction.UndoAchieve -> restoreWishUseCase(id)
+                WishAction.Someday -> markWishSomedayUseCase(id)
+                WishAction.Restore -> restoreWishUseCase(id)
+                WishAction.Delete -> deleteWishUseCase(id)
+            }
+        }
+    }
+
+    /**
+     * Not rethrown: an uncaught failure here would kill the app, while the wish is still as it was
+     * and the streams keep showing it.
+     */
+    private fun write(block: suspend () -> Unit) {
+        viewModelScope.launch {
+            runCatching { block() }
+        }
+    }
 }
 
 data class HomeUiState(
@@ -93,6 +169,8 @@ data class HomeUiState(
     val nextCard: NextCardUiState = NextCardUiState(),
     /** Set once after a card is created, so the screen can move to it. */
     val createdCardId: BingoCardId? = null,
+    val flippedCardIds: Set<BingoCardId> = emptySet(),
+    val sheet: WishSheetState? = null,
     private val cardsLoaded: Boolean = false,
     private val wishesLoaded: Boolean = false,
 ) {
@@ -114,3 +192,30 @@ data class NextCardUiState(
 }
 
 enum class NextCardReadiness { Filling, Ready, Overflowing }
+
+sealed interface WishPlace {
+    data object NextCard : WishPlace
+    data class Card(val id: BingoCardId, val number: Int) : WishPlace
+}
+
+/**
+ * The wish is a snapshot from when the sheet opened. Every action closes the sheet, so it never
+ * has to follow a wish that changes underneath it.
+ */
+data class WishSheetState(
+    val wish: Wish,
+    val place: WishPlace,
+    val isEditingTitle: Boolean = false,
+    val titleInput: String = "",
+) {
+    /** A wish on the next card is always planned, so its place alone decides. */
+    val actions: List<WishAction>
+        get() = when (place) {
+            WishPlace.NextCard -> listOf(WishAction.Achieve, WishAction.Someday, WishAction.Delete)
+            is WishPlace.Card -> when (wish.status) {
+                is WishStatus.Planned -> listOf(WishAction.Achieve, WishAction.Someday)
+                is WishStatus.Done -> listOf(WishAction.UndoAchieve)
+                is WishStatus.Someday -> listOf(WishAction.Restore)
+            }
+        }
+}

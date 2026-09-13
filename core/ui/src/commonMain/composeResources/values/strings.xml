@@ -3,4 +3,18 @@
     <string name="tab_home">HOME</string>
     <string name="tab_pool">プール</string>
     <string name="tab_archive">アーカイブ</string>
+
+    <string name="wish_sheet_place_next_card">次のカード</string>
+    <string name="wish_sheet_place_card">カード #%1$d</string>
+    <string name="wish_sheet_status_planned">未達</string>
+    <string name="wish_sheet_status_done">叶えた</string>
+    <string name="wish_sheet_status_someday">またいつか</string>
+    <string name="wish_sheet_edit_title">本文を編集</string>
+    <string name="wish_sheet_save">保存</string>
+    <string name="wish_sheet_cancel">キャンセル</string>
+    <string name="wish_action_achieve">叶えた！</string>
+    <string name="wish_action_undo_achieve">取り消し</string>
+    <string name="wish_action_someday">またいつか</string>
+    <string name="wish_action_restore">戻す</string>
+    <string name="wish_action_delete">削除</string>
 </resources>

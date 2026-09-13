@@ -1,5 +1,6 @@
 package com.rmakiyama.wishline.feature.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,6 +37,7 @@ internal fun NextCardPage(
     onInputChange: (String) -> Unit,
     onAddWish: () -> Unit,
     onCreateCard: () -> Unit,
+    onWishClick: (Wish) -> Unit,
 ) {
     val spacing = WlTheme.spacing
     CardFrame {
@@ -54,7 +56,7 @@ internal fun NextCardPage(
             reverseLayout = true,
         ) {
             items(uiState.wishes.asReversed(), key = { it.id.value }) { wish ->
-                WishRow(wish)
+                WishRow(wish = wish, onClick = { onWishClick(wish) })
                 HorizontalDivider(color = WlTheme.colorScheme.surfaceContainerHigh)
             }
         }
@@ -140,10 +142,11 @@ private fun Header(
 }
 
 @Composable
-private fun WishRow(wish: Wish) {
+private fun WishRow(wish: Wish, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(vertical = WlTheme.spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(WlTheme.spacing.s + WlTheme.spacing.xs),

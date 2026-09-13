@@ -7,7 +7,13 @@ import com.rmakiyama.wishline.domain.SlotStatus
 import com.rmakiyama.wishline.domain.Wish
 import com.rmakiyama.wishline.domain.WishId
 import com.rmakiyama.wishline.domain.WishStatus
+import com.rmakiyama.wishline.core.ui.component.WishAction
 import com.rmakiyama.wishline.usecase.AddWishUseCase
+import com.rmakiyama.wishline.usecase.ChangeWishTitleUseCase
+import com.rmakiyama.wishline.usecase.DeleteWishUseCase
+import com.rmakiyama.wishline.usecase.MarkWishDoneUseCase
+import com.rmakiyama.wishline.usecase.MarkWishSomedayUseCase
+import com.rmakiyama.wishline.usecase.RestoreWishUseCase
 import com.rmakiyama.wishline.usecase.CreateBingoCardUseCase
 import com.rmakiyama.wishline.usecase.GetOpenBingoCardsStreamUseCase
 import com.rmakiyama.wishline.usecase.GetUnassignedWishesStreamUseCase
@@ -16,6 +22,7 @@ import dev.mokkery.answering.throws
 import dev.mokkery.every
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
+import dev.mokkery.MockMode
 import dev.mokkery.mock
 import dev.mokkery.verify.VerifyMode.Companion.exactly
 import dev.mokkery.verify.VerifyMode.Companion.not
@@ -56,6 +63,11 @@ class HomeViewModelTest {
     private val createCard = mock<CreateBingoCardUseCase> {
         everySuspend { invoke(any()) } returns BingoCardId("card-1")
     }
+    private val changeTitle = mock<ChangeWishTitleUseCase>(MockMode.autoUnit)
+    private val markDone = mock<MarkWishDoneUseCase>(MockMode.autoUnit)
+    private val markSomeday = mock<MarkWishSomedayUseCase>(MockMode.autoUnit)
+    private val restore = mock<RestoreWishUseCase>(MockMode.autoUnit)
+    private val delete = mock<DeleteWishUseCase>(MockMode.autoUnit)
 
     @BeforeTest
     fun setUp() {
@@ -209,7 +221,200 @@ class HomeViewModelTest {
         vm.uiState.value.createdCardId.shouldBeNull()
     }
 
-    private fun viewModel() = HomeViewModel(getOpenCards, getUnassigned, addWish, createCard)
+    @Test
+    fun `given a card, when it is flipped twice, then it shows its front again`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onFlipCard(BingoCardId("c1"))
+        vm.onFlipCard(BingoCardId("c1"))
+
+        vm.uiState.value.flippedCardIds shouldBe emptySet()
+    }
+
+    @Test
+    fun `given a wish on the next card, when it is opened, then it offers achieve, someday and delete`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onWishClick(wishes(1).first(), WishPlace.NextCard)
+
+        vm.uiState.value.sheet?.actions shouldBe listOf(WishAction.Achieve, WishAction.Someday, WishAction.Delete)
+    }
+
+    @Test
+    fun `given a planned wish on a card, when it is opened, then it offers achieve and someday`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onWishClick(wishes(1).first(), onCard)
+
+        vm.uiState.value.sheet?.actions shouldBe listOf(WishAction.Achieve, WishAction.Someday)
+    }
+
+    @Test
+    fun `given a done wish on a card, when it is opened, then it only offers undo`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onWishClick(wish(WishStatus.Done(now)), onCard)
+
+        vm.uiState.value.sheet?.actions shouldBe listOf(WishAction.UndoAchieve)
+    }
+
+    @Test
+    fun `given a someday wish on a card, when it is opened, then it only offers restore`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onWishClick(wish(WishStatus.Someday(now)), onCard)
+
+        vm.uiState.value.sheet?.actions shouldBe listOf(WishAction.Restore)
+    }
+
+    @Test
+    fun `given an open sheet, when achieve is chosen, then the wish is marked done`() = runTest(dispatcher) {
+        val wish = wishes(1).first()
+        val vm = viewModel()
+        vm.onWishClick(wish, onCard)
+
+        vm.onWishAction(WishAction.Achieve)
+
+        verifySuspend(exactly(1)) { markDone.invoke(wish.id) }
+    }
+
+    @Test
+    fun `given an open sheet, when an action is chosen, then the sheet closes`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onWishClick(wishes(1).first(), onCard)
+
+        vm.onWishAction(WishAction.Achieve)
+
+        vm.uiState.value.sheet.shouldBeNull()
+    }
+
+    @Test
+    fun `given a done wish on a card, when delete is chosen, then nothing happens`() = runTest(dispatcher) {
+        val wish = wish(WishStatus.Done(now))
+        val vm = viewModel()
+        vm.onWishClick(wish, onCard)
+
+        vm.onWishAction(WishAction.Delete)
+
+        verifySuspend(not) { delete.invoke(any()) }
+    }
+
+    @Test
+    fun `given an open sheet, when someday is chosen, then the wish is marked someday`() = runTest(dispatcher) {
+        val wish = wishes(1).first()
+        val vm = viewModel()
+        vm.onWishClick(wish, onCard)
+
+        vm.onWishAction(WishAction.Someday)
+
+        verifySuspend(exactly(1)) { markSomeday.invoke(wish.id) }
+    }
+
+    @Test
+    fun `given a someday wish, when restore is chosen, then the wish returns to planned`() = runTest(dispatcher) {
+        val wish = wish(WishStatus.Someday(now))
+        val vm = viewModel()
+        vm.onWishClick(wish, onCard)
+
+        vm.onWishAction(WishAction.Restore)
+
+        verifySuspend(exactly(1)) { restore.invoke(wish.id) }
+    }
+
+    @Test
+    fun `given a wish on the next card, when delete is chosen, then the wish is deleted`() = runTest(dispatcher) {
+        val wish = wishes(1).first()
+        val vm = viewModel()
+        vm.onWishClick(wish, WishPlace.NextCard)
+
+        vm.onWishAction(WishAction.Delete)
+
+        verifySuspend(exactly(1)) { delete.invoke(wish.id) }
+    }
+
+    @Test
+    fun `given a planned wish on a card, when delete is chosen, then nothing happens`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onWishClick(wishes(1).first(), onCard)
+
+        vm.onWishAction(WishAction.Delete)
+
+        verifySuspend(not) { delete.invoke(any()) }
+    }
+
+    @Test
+    fun `given deleting fails, when delete is chosen, then the screen keeps working`() = runTest(dispatcher) {
+        everySuspend { delete.invoke(any()) } throws IllegalStateException("still on a card")
+        val vm = viewModel()
+        vm.onWishClick(wishes(1).first(), WishPlace.NextCard)
+
+        vm.onWishAction(WishAction.Delete)
+
+        vm.uiState.value.sheet.shouldBeNull()
+    }
+
+    @Test
+    fun `given a done wish, when undo is chosen, then the wish returns to planned`() = runTest(dispatcher) {
+        val wish = wish(WishStatus.Done(now))
+        val vm = viewModel()
+        vm.onWishClick(wish, onCard)
+
+        vm.onWishAction(WishAction.UndoAchieve)
+
+        verifySuspend(exactly(1)) { restore.invoke(wish.id) }
+    }
+
+    @Test
+    fun `given editing has started, then the input holds the current title`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onWishClick(wishes(1).first(), onCard)
+
+        vm.onStartEditTitle()
+
+        vm.uiState.value.sheet?.titleInput shouldBe "wish 0"
+    }
+
+    @Test
+    fun `given a new title with spaces around it, when it is saved, then it is stored trimmed`() = runTest(dispatcher) {
+        val wish = wishes(1).first()
+        val vm = viewModel()
+        vm.onWishClick(wish, onCard)
+        vm.onStartEditTitle()
+        vm.onTitleInputChange("  富士山に登る ")
+
+        vm.onSaveTitle()
+
+        verifySuspend(exactly(1)) { changeTitle.invoke(wish.id, "富士山に登る") }
+    }
+
+    @Test
+    fun `given a blank title, when it is saved, then nothing is stored`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onWishClick(wishes(1).first(), onCard)
+        vm.onStartEditTitle()
+        vm.onTitleInputChange("   ")
+
+        vm.onSaveTitle()
+
+        verifySuspend(not) { changeTitle.invoke(any(), any()) }
+    }
+
+    private val now = Instant.fromEpochMilliseconds(0)
+    private val onCard = WishPlace.Card(BingoCardId("c1"), number = 1)
+
+    private fun viewModel() = HomeViewModel(
+        getOpenCards,
+        getUnassigned,
+        addWish,
+        createCard,
+        changeTitle,
+        markDone,
+        markSomeday,
+        restore,
+        delete,
+    )
+
+    private fun wish(status: WishStatus): Wish = wishes(1).first().copy(status = status)
 
     private fun card(id: String): BingoCard = BingoCard(
         id = BingoCardId(id),
