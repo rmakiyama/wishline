@@ -17,6 +17,7 @@ class SQLDelightBingoCardRepositoryTest {
 
     private val database = inMemoryDatabase()
     private val wishRepository = SQLDelightWishRepository(database)
+    private val wishQueries = SQLDelightWishQueries(database)
     private val cardRepository = SQLDelightBingoCardRepository(database)
 
     @Test
@@ -56,7 +57,7 @@ class SQLDelightBingoCardRepositoryTest {
 
         givenAnOpenCard("c1", placed.take(25))
 
-        wishRepository.getUnassignedWishesStream().first().map { it.id.value } shouldContainExactly
+        wishQueries.getUnassignedWishesStream().first().map { it.wish.id.value } shouldContainExactly
             listOf("w25")
     }
 
@@ -88,7 +89,7 @@ class SQLDelightBingoCardRepositoryTest {
 
         cardRepository.close(cardId("c1"), at(4))
 
-        wishRepository.getUnassignedWishesStream().first().map { it.id.value } shouldContainExactly
+        wishQueries.getUnassignedWishesStream().first().map { it.wish.id.value } shouldContainExactly
             (2 until 25).map { "w$it" }
     }
 
@@ -150,12 +151,12 @@ class SQLDelightBingoCardRepositoryTest {
         val placed = givenWishes(25)
         givenAnOpenCard("c1", placed)
 
-        wishRepository.getUnassignedWishesStream().test {
+        wishQueries.getUnassignedWishesStream().test {
             awaitItem() shouldBe emptyList()
 
             cardRepository.close(cardId("c1"), at(3))
 
-            awaitItem().map { it.id.value } shouldContainExactly placed.map { it.id.value }
+            awaitItem().map { it.wish.id.value } shouldContainExactly placed.map { it.id.value }
             cancelAndIgnoreRemainingEvents()
         }
     }

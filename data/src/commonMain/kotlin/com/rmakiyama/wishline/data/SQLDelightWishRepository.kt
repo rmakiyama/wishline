@@ -29,10 +29,6 @@ class SQLDelightWishRepository(
         return wishQueries.selectAll(::toWish).asFlow().mapToList(Dispatchers.IO)
     }
 
-    override fun getUnassignedWishesStream(): Flow<List<Wish>> {
-        return wishQueries.selectUnassigned(::toWish).asFlow().mapToList(Dispatchers.IO)
-    }
-
     override suspend fun add(wishes: List<Wish>) {
         withContext(Dispatchers.IO) {
             database.transaction {

@@ -2,11 +2,13 @@ package com.rmakiyama.wishline.di
 
 import com.rmakiyama.wishline.data.SQLDelightBingoCardRepository
 import com.rmakiyama.wishline.data.SQLDelightOnboardingRepository
+import com.rmakiyama.wishline.data.SQLDelightWishQueries
 import com.rmakiyama.wishline.data.SQLDelightWishRepository
 import com.rmakiyama.wishline.data.db.DatabaseDriverFactory
 import com.rmakiyama.wishline.data.db.WishlineDatabase
 import com.rmakiyama.wishline.domain.BingoCardRepository
 import com.rmakiyama.wishline.domain.OnboardingRepository
+import com.rmakiyama.wishline.domain.WishQueries
 import com.rmakiyama.wishline.domain.WishRepository
 import com.rmakiyama.wishline.usecase.AddWish
 import com.rmakiyama.wishline.usecase.AddWishUseCase
@@ -59,6 +61,12 @@ interface SharedProviders {
     fun provideWishRepository(
         impl: SQLDelightWishRepository,
     ): WishRepository = impl
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun provideWishQueries(
+        impl: SQLDelightWishQueries,
+    ): WishQueries = impl
 
     @Provides
     @SingleIn(AppScope::class)

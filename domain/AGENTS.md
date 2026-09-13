@@ -13,6 +13,15 @@ Decide by what the check needs.
 
 Never place the same rule in both.
 
+## Repository or queries
+
+Decide by what comes back.
+
+- **A `Wish` or a `BingoCard`** — the repository, whether by id or by condition. A repository is the collection of an aggregate, reading included
+- **Anything else** — `WishQueries`. `UnassignedWish` carries a fact that spans wishes and cards, and no wish or card could answer it alone
+
+A query result carries facts, never rules: whether a wish may be deleted is decided where the fact is used, and enforced where the write happens.
+
 ## States
 
 - Model exclusive states as a sealed interface, and let each state carry its own data

@@ -10,7 +10,9 @@ selectAll:
 SELECT * FROM wish ORDER BY created_at DESC, rowid DESC;
 
 selectUnassigned:
-SELECT wish.* FROM wish
+SELECT wish.*,
+       EXISTS (SELECT 1 FROM bingo_slot WHERE bingo_slot.wish_id = wish.id) AS has_been_on_card
+FROM wish
 WHERE wish.status = 'PLANNED'
   AND NOT EXISTS (
       SELECT 1 FROM bingo_slot
