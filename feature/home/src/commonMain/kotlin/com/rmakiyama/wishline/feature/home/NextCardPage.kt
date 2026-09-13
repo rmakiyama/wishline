@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.rmakiyama.wishline.core.ui.icon.WlIcons
 import com.rmakiyama.wishline.designsystem.theme.WlTheme
 import com.rmakiyama.wishline.domain.BingoCard
+import com.rmakiyama.wishline.domain.UnassignedWish
 import com.rmakiyama.wishline.domain.Wish
 import org.jetbrains.compose.resources.stringResource
 
@@ -37,7 +38,7 @@ internal fun NextCardPage(
     onInputChange: (String) -> Unit,
     onAddWish: () -> Unit,
     onCreateCard: () -> Unit,
-    onWishClick: (Wish) -> Unit,
+    onWishClick: (UnassignedWish) -> Unit,
 ) {
     val spacing = WlTheme.spacing
     CardFrame {
@@ -55,8 +56,8 @@ internal fun NextCardPage(
                 .weight(1f),
             reverseLayout = true,
         ) {
-            items(uiState.wishes.asReversed(), key = { it.id.value }) { wish ->
-                WishRow(wish = wish, onClick = { onWishClick(wish) })
+            items(uiState.wishes.asReversed(), key = { it.wish.id.value }) { unassigned ->
+                WishRow(wish = unassigned.wish, onClick = { onWishClick(unassigned) })
                 HorizontalDivider(color = WlTheme.colorScheme.surfaceContainerHigh)
             }
         }

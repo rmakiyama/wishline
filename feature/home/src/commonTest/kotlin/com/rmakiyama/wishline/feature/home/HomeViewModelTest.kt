@@ -4,6 +4,7 @@ import com.rmakiyama.wishline.domain.BingoCard
 import com.rmakiyama.wishline.domain.BingoCardId
 import com.rmakiyama.wishline.domain.BingoSlot
 import com.rmakiyama.wishline.domain.SlotStatus
+import com.rmakiyama.wishline.domain.UnassignedWish
 import com.rmakiyama.wishline.domain.Wish
 import com.rmakiyama.wishline.domain.WishId
 import com.rmakiyama.wishline.domain.WishStatus
@@ -49,7 +50,7 @@ class HomeViewModelTest {
 
     private val dispatcher = UnconfinedTestDispatcher()
     private val openCards = MutableStateFlow<List<BingoCard>>(emptyList())
-    private val unassigned = MutableStateFlow<List<Wish>>(emptyList())
+    private val unassigned = MutableStateFlow<List<UnassignedWish>>(emptyList())
 
     private val getOpenCards = mock<GetOpenBingoCardsStreamUseCase> {
         every { invoke() } returns openCards
@@ -105,7 +106,7 @@ class HomeViewModelTest {
 
     @Test
     fun `given fewer than 25 wishes, then the next card is still filling`() = runTest(dispatcher) {
-        unassigned.value = wishes(24)
+        unassigned.value = unassigned(24)
         val vm = viewModel()
 
         vm.uiState.value.nextCard.readiness shouldBe NextCardReadiness.Filling
@@ -113,7 +114,7 @@ class HomeViewModelTest {
 
     @Test
     fun `given exactly 25 wishes, then the next card is ready`() = runTest(dispatcher) {
-        unassigned.value = wishes(25)
+        unassigned.value = unassigned(25)
         val vm = viewModel()
 
         vm.uiState.value.nextCard.readiness shouldBe NextCardReadiness.Ready
@@ -121,7 +122,7 @@ class HomeViewModelTest {
 
     @Test
     fun `given more than 25 wishes, then the next card is overflowing`() = runTest(dispatcher) {
-        unassigned.value = wishes(26)
+        unassigned.value = unassigned(26)
         val vm = viewModel()
 
         vm.uiState.value.nextCard.readiness shouldBe NextCardReadiness.Overflowing
@@ -160,7 +161,7 @@ class HomeViewModelTest {
     @Test
     fun `given 25 wishes, when a card is created, then those wishes make the card`() = runTest(dispatcher) {
         val wishes = wishes(25)
-        unassigned.value = wishes
+        unassigned.value = wishes.map { UnassignedWish(it, hasBeenOnCard = false) }
         val vm = viewModel()
 
         vm.onCreateCard()
@@ -170,7 +171,7 @@ class HomeViewModelTest {
 
     @Test
     fun `given 25 wishes, when a card is created, then the screen is told which card to show`() = runTest(dispatcher) {
-        unassigned.value = wishes(25)
+        unassigned.value = unassigned(25)
         val vm = viewModel()
 
         vm.onCreateCard()
@@ -180,7 +181,7 @@ class HomeViewModelTest {
 
     @Test
     fun `given 24 wishes, when a card is created, then nothing happens`() = runTest(dispatcher) {
-        unassigned.value = wishes(24)
+        unassigned.value = unassigned(24)
         val vm = viewModel()
 
         vm.onCreateCard()
@@ -190,7 +191,7 @@ class HomeViewModelTest {
 
     @Test
     fun `given 26 wishes, when a card is created, then nothing happens`() = runTest(dispatcher) {
-        unassigned.value = wishes(26)
+        unassigned.value = unassigned(26)
         val vm = viewModel()
 
         vm.onCreateCard()
@@ -201,7 +202,7 @@ class HomeViewModelTest {
     @Test
     fun `given creation fails, when a card is created, then the next card can be used again`() = runTest(dispatcher) {
         everySuspend { createCard.invoke(any()) } throws IllegalStateException("disk full")
-        unassigned.value = wishes(25)
+        unassigned.value = unassigned(25)
         val vm = viewModel()
 
         vm.onCreateCard()
@@ -212,7 +213,7 @@ class HomeViewModelTest {
 
     @Test
     fun `given a created card, when the screen has shown it, then it is not asked to show it again`() = runTest(dispatcher) {
-        unassigned.value = wishes(25)
+        unassigned.value = unassigned(25)
         val vm = viewModel()
         vm.onCreateCard()
 
@@ -235,9 +236,28 @@ class HomeViewModelTest {
     fun `given a wish on the next card, when it is opened, then it offers achieve, someday and delete`() = runTest(dispatcher) {
         val vm = viewModel()
 
-        vm.onWishClick(wishes(1).first(), WishPlace.NextCard)
+        vm.onWishClick(wishes(1).first(), WishPlace.NextCard(hasBeenOnCard = false))
 
         vm.uiState.value.sheet?.actions shouldBe listOf(WishAction.Achieve, WishAction.Someday, WishAction.Delete)
+    }
+
+    @Test
+    fun `given a wish on the next card that has been on a card, when it is opened, then it offers achieve and someday`() = runTest(dispatcher) {
+        val vm = viewModel()
+
+        vm.onWishClick(wishes(1).first(), WishPlace.NextCard(hasBeenOnCard = true))
+
+        vm.uiState.value.sheet?.actions shouldBe listOf(WishAction.Achieve, WishAction.Someday)
+    }
+
+    @Test
+    fun `given a wish on the next card that has been on a card, when delete is chosen, then nothing happens`() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onWishClick(wishes(1).first(), WishPlace.NextCard(hasBeenOnCard = true))
+
+        vm.onWishAction(WishAction.Delete)
+
+        verifySuspend(not) { delete.invoke(any()) }
     }
 
     @Test
@@ -325,7 +345,7 @@ class HomeViewModelTest {
     fun `given a wish on the next card, when delete is chosen, then the wish is deleted`() = runTest(dispatcher) {
         val wish = wishes(1).first()
         val vm = viewModel()
-        vm.onWishClick(wish, WishPlace.NextCard)
+        vm.onWishClick(wish, WishPlace.NextCard(hasBeenOnCard = false))
 
         vm.onWishAction(WishAction.Delete)
 
@@ -346,7 +366,7 @@ class HomeViewModelTest {
     fun `given deleting fails, when delete is chosen, then the screen keeps working`() = runTest(dispatcher) {
         everySuspend { delete.invoke(any()) } throws IllegalStateException("still on a card")
         val vm = viewModel()
-        vm.onWishClick(wishes(1).first(), WishPlace.NextCard)
+        vm.onWishClick(wishes(1).first(), WishPlace.NextCard(hasBeenOnCard = false))
 
         vm.onWishAction(WishAction.Delete)
 
@@ -426,6 +446,9 @@ class HomeViewModelTest {
             BingoSlot(position = position, wish = wish, status = SlotStatus.Unmarked)
         },
     )
+
+    private fun unassigned(count: Int): List<UnassignedWish> =
+        wishes(count).map { UnassignedWish(it, hasBeenOnCard = false) }
 
     private fun wishes(count: Int): List<Wish> = List(count) { index ->
         Wish(

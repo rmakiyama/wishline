@@ -2,6 +2,8 @@
 
 Repositories that turn stored records into domain types. Feature and usecase modules never see storage; `:shared` builds the database in its dependency graph.
 
+Queries (`SQLDelightWishQueries`) answer the questions whose answer is not an aggregate. A fact that spans tables, such as whether a wish has ever sat on a card, is computed in the SQL of the query that needs it, so one emission carries everything the screen decides on.
+
 ## State and history
 
 Current state is read straight from its own tables, never derived from events: Home renders every slot of every open card, so that read has to stay a plain query.

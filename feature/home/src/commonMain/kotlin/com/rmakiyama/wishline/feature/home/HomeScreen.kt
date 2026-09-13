@@ -60,7 +60,7 @@ fun HomeScreen(
         WishSheet(
             title = sheet.wish.title,
             place = when (val place = sheet.place) {
-                WishPlace.NextCard -> WishSheetPlace.NextCard
+                is WishPlace.NextCard -> WishSheetPlace.NextCard
                 is WishPlace.Card -> WishSheetPlace.Card(place.number)
             },
             status = when (sheet.wish.status) {
@@ -146,7 +146,7 @@ private fun HomeScreen(
                         onInputChange = onInputChange,
                         onAddWish = onAddWish,
                         onCreateCard = onCreateCard,
-                        onWishClick = { wish -> onWishClick(wish, WishPlace.NextCard) },
+                        onWishClick = { onWishClick(it.wish, WishPlace.NextCard(hasBeenOnCard = it.hasBeenOnCard)) },
                     )
                 }
             }
