@@ -128,15 +128,12 @@ class HomeViewModel(
         _uiState.update { state -> state.copy(sheet = state.sheet?.copy(isEditingTitle = false)) }
     }
 
-    /** Blank input is ignored; the sheet closes once the new title is on its way. */
     fun onSaveTitle() {
         val sheet = _uiState.value.sheet ?: return
         val title = sheet.titleInput.trim()
         if (title.isEmpty()) return
         _uiState.update { it.copy(sheet = null) }
-        viewModelScope.launch {
-            runCatching { changeWishTitleUseCase(sheet.wish.id, title) }
-        }
+        write { changeWishTitleUseCase(sheet.wish.id, title) }
     }
 
     /** Ignores an action the sheet does not offer, so a stale tap cannot move a wish the wrong way. */
@@ -144,18 +141,25 @@ class HomeViewModel(
         val sheet = _uiState.value.sheet ?: return
         if (action !in sheet.actions) return
         _uiState.update { it.copy(sheet = null) }
-        viewModelScope.launch {
-            val id = sheet.wish.id
-            // A failed write leaves the wish as it was; the streams keep showing the truth.
-            runCatching {
-                when (action) {
-                    WishAction.Achieve -> markWishDoneUseCase(id)
-                    WishAction.UndoAchieve -> restoreWishUseCase(id)
-                    WishAction.Someday -> markWishSomedayUseCase(id)
-                    WishAction.Restore -> restoreWishUseCase(id)
-                    WishAction.Delete -> deleteWishUseCase(id)
-                }
+        val id = sheet.wish.id
+        write {
+            when (action) {
+                WishAction.Achieve -> markWishDoneUseCase(id)
+                WishAction.UndoAchieve -> restoreWishUseCase(id)
+                WishAction.Someday -> markWishSomedayUseCase(id)
+                WishAction.Restore -> restoreWishUseCase(id)
+                WishAction.Delete -> deleteWishUseCase(id)
             }
+        }
+    }
+
+    /**
+     * Not rethrown: an uncaught failure here would kill the app, while the wish is still as it was
+     * and the streams keep showing it.
+     */
+    private fun write(block: suspend () -> Unit) {
+        viewModelScope.launch {
+            runCatching { block() }
         }
     }
 }
@@ -204,7 +208,7 @@ data class WishSheetState(
     val isEditingTitle: Boolean = false,
     val titleInput: String = "",
 ) {
-    /** The first action is the main one. A wish on the next card is always planned. */
+    /** A wish on the next card is always planned, so its place alone decides. */
     val actions: List<WishAction>
         get() = when (place) {
             WishPlace.NextCard -> listOf(WishAction.Achieve, WishAction.Someday, WishAction.Delete)

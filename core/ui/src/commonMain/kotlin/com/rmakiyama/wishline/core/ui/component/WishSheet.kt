@@ -58,10 +58,7 @@ sealed interface WishSheetPlace {
 /** What the sheet offers; which ones apply is decided by the caller from the wish's place and status. */
 enum class WishAction { Achieve, UndoAchieve, Someday, Restore, Delete }
 
-/**
- * The sheet a wish opens from any list or grid. [actions] appear in the given order: the first is
- * the primary button and the rest share a row below it.
- */
+/** [actions] appear in the given order: the first is the primary button and the rest share a row below it. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WishSheet(

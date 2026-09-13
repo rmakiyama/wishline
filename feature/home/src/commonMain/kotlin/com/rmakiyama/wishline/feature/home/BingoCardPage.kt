@@ -71,6 +71,7 @@ internal fun BingoCardPage(
     onFlip: () -> Unit,
     onSlotClick: (BingoSlot) -> Unit,
 ) {
+    // Sorted so that index equals position: the grid's lines and cell taps both address cells by position.
     val slots = remember(card) { card.slots.sortedBy { it.position } }
     CardFrame {
         CardHeader(card = card, onFlip = onFlip)
