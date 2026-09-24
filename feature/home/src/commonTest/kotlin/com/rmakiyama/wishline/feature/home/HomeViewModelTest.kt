@@ -490,6 +490,29 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `given a dialog is up, when another card changes, then the dialog stays`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"), card("c2"))
+        val vm = viewModel()
+        vm.onCloseCardClick(BingoCardId("c1"))
+
+        openCards.value = listOf(card("c1"), card("c2").copy(label = "2026 冬"))
+
+        vm.uiState.value.cardDialog shouldBe CardDialog.CloseConfirm(BingoCardId("c1"))
+    }
+
+    @Test
+    fun `given a label is being typed, when the cards are emitted again, then the input survives`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"))
+        val vm = viewModel()
+        vm.onEditLabelClick(BingoCardId("c1"))
+        vm.onLabelInputChange("2026 夏")
+
+        openCards.value = listOf(card("c1"), card("c2"))
+
+        (vm.uiState.value.cardDialog as CardDialog.EditLabel).input shouldBe "2026 夏"
+    }
+
+    @Test
     fun `given a card with a label, when it is edited, then the current label is offered`() = runTest(dispatcher) {
         openCards.value = listOf(card("c1").copy(label = "2026 夏"))
         val vm = viewModel()

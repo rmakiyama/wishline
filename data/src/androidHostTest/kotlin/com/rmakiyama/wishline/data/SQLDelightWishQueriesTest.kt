@@ -73,6 +73,20 @@ class SQLDelightWishQueriesTest {
     }
 
     @Test
+    fun `given a card about to be closed, then what it says it hands back is what comes back`() = runTest {
+        val placed = givenWishes(25)
+        givenAnOpenCard("c1", placed)
+        wishRepository.changeStatus(placed[0].id, WishStatus.Done(at(3)))
+        wishRepository.changeStatus(placed[1].id, WishStatus.Someday(at(3)))
+        val card = cardRepository.getOpenCardsStream().first().single()
+
+        cardRepository.close(cardId("c1"), at(4))
+
+        queries.getUnassignedWishesStream().first().map { it.wish.id } shouldContainExactly
+            card.wishesReturningOnClose().map { it.id }
+    }
+
+    @Test
     fun `given one slot still unmarked, when asking for the fully marked card, then there is none`() = runTest {
         val placed = givenWishes(25)
         givenAnOpenCard("c1", placed)

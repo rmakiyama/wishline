@@ -14,6 +14,7 @@ import dev.mokkery.matcher.ofType
 import dev.mokkery.mock
 import dev.mokkery.verify.VerifyMode.Companion.exactly
 import dev.mokkery.verify.VerifyMode.Companion.not
+import dev.mokkery.verify.VerifyMode.Companion.order
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -43,6 +44,18 @@ class MarkWishDoneTest {
         markDone(WishId("w1"))
 
         verifySuspend(exactly(1)) { bingoCardRepository.close(BingoCardId("c1"), any()) }
+    }
+
+    @Test
+    fun `when a wish is marked done, then the card is looked at after the wish is stored`() = runTest {
+        everySuspend { wishQueries.fullyMarkedOpenCardId(any()) } returns null
+
+        markDone(WishId("w1"))
+
+        verifySuspend(order) {
+            wishRepository.changeStatus(WishId("w1"), ofType<WishStatus.Done>())
+            wishQueries.fullyMarkedOpenCardId(WishId("w1"))
+        }
     }
 
     @Test
