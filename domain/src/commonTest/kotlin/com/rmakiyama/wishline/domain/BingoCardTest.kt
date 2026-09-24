@@ -40,24 +40,24 @@ class BingoCardTest {
     }
 
     @Test
-    fun `given one unmarked slot, when its wish would be marked, then the card is completed`() {
-        val card = card(marked = (1 until BingoCard.SLOT_COUNT).toSet())
-
-        card.isCompletedByMarking(WishId("wish-0")) shouldBe true
-    }
-
-    @Test
-    fun `given two unmarked slots, when one wish would be marked, then the card is not completed`() {
+    fun `given a card with two planned wishes, when it closes, then both return`() {
         val card = card(marked = (2 until BingoCard.SLOT_COUNT).toSet())
 
-        card.isCompletedByMarking(WishId("wish-0")) shouldBe false
+        card.wishesReturningOnClose().map { it.id } shouldContainExactly listOf(WishId("wish-0"), WishId("wish-1"))
     }
 
     @Test
-    fun `given a someday slot beside the last unmarked one, when that wish would be marked, then the card is not completed`() {
+    fun `given a someday wish, when the card closes, then it stays on the card`() {
         val card = card(marked = (2 until BingoCard.SLOT_COUNT).toSet(), someday = setOf(1))
 
-        card.isCompletedByMarking(WishId("wish-0")) shouldBe false
+        card.wishesReturningOnClose().map { it.id } shouldContainExactly listOf(WishId("wish-0"))
+    }
+
+    @Test
+    fun `given every wish done, when the card closes, then nothing returns`() {
+        val card = card(marked = (0 until BingoCard.SLOT_COUNT).toSet())
+
+        card.wishesReturningOnClose() shouldBe emptyList()
     }
 
     private fun card(marked: Set<Int>, someday: Set<Int> = emptySet()): BingoCard {

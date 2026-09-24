@@ -5,10 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.rmakiyama.wishline.core.ui.component.WishAction
 import com.rmakiyama.wishline.domain.BingoCard
 import com.rmakiyama.wishline.domain.BingoCardId
-import com.rmakiyama.wishline.domain.SlotStatus
 import com.rmakiyama.wishline.domain.UnassignedWish
 import com.rmakiyama.wishline.domain.Wish
-import com.rmakiyama.wishline.domain.WishId
 import com.rmakiyama.wishline.domain.WishStatus
 import com.rmakiyama.wishline.usecase.AddWishUseCase
 import com.rmakiyama.wishline.usecase.ChangeBingoCardLabelUseCase
@@ -58,7 +56,14 @@ class HomeViewModel(
     private fun observeOpenCards() {
         viewModelScope.launch {
             getOpenBingoCardsStream().collect { cards ->
-                _uiState.update { it.copy(cards = cards, cardsLoaded = true) }
+                _uiState.update { state ->
+                    state.copy(
+                        cards = cards,
+                        // A card can close while its dialog is up, and then there is nothing left to act on.
+                        cardDialog = state.cardDialog?.takeIf { dialog -> cards.any { it.id == dialog.cardId } },
+                        cardsLoaded = true,
+                    )
+                }
             }
         }
     }
@@ -151,10 +156,7 @@ class HomeViewModel(
         val id = sheet.wish.id
         write {
             when (action) {
-                WishAction.Achieve -> {
-                    markWishDoneUseCase(id)
-                    closeIfCompleted(sheet.place, id)
-                }
+                WishAction.Achieve -> markWishDoneUseCase(id)
                 WishAction.UndoAchieve -> restoreWishUseCase(id)
                 WishAction.Someday -> markWishSomedayUseCase(id)
                 WishAction.Restore -> restoreWishUseCase(id)
@@ -163,43 +165,34 @@ class HomeViewModel(
         }
     }
 
-    /** Marking the last slot closes the card on its own: there is nothing left to decide, so no confirmation. */
-    private suspend fun closeIfCompleted(place: WishPlace, marked: WishId) {
-        val cardId = (place as? WishPlace.Card)?.id ?: return
-        val card = _uiState.value.cards.firstOrNull { it.id == cardId } ?: return
-        if (card.isCompletedByMarking(marked)) closeCard(cardId)
-    }
-
-    fun onCloseCardClick(card: BingoCard) {
-        _uiState.update { it.copy(cardDialog = CardDialog.CloseConfirm(card)) }
+    fun onCloseCardClick(id: BingoCardId) {
+        _uiState.update { it.copy(cardDialog = CardDialog.CloseConfirm(id)) }
     }
 
     fun onConfirmClose() {
         val dialog = _uiState.value.cardDialog as? CardDialog.CloseConfirm ?: return
         _uiState.update { it.copy(cardDialog = null) }
-        write { closeCard(dialog.card.id) }
+        write { closeBingoCardUseCase(dialog.cardId) }
     }
 
-    // TODO: Move to the archive detail once it exists; until then the carousel just moves on.
-    private suspend fun closeCard(id: BingoCardId) {
-        closeBingoCardUseCase(id)
-    }
-
-    fun onEditLabelClick(card: BingoCard) {
-        _uiState.update { it.copy(cardDialog = CardDialog.EditLabel(card, input = card.label.orEmpty())) }
+    fun onEditLabelClick(id: BingoCardId) {
+        _uiState.update { state ->
+            val label = state.cards.firstOrNull { it.id == id }?.label.orEmpty()
+            state.copy(cardDialog = CardDialog.EditLabel(id, input = label))
+        }
     }
 
     fun onLabelInputChange(value: String) {
         _uiState.update { state ->
             val dialog = state.cardDialog as? CardDialog.EditLabel ?: return@update state
-            state.copy(cardDialog = dialog.copy(input = value))
+            state.copy(cardDialog = dialog.copy(input = value.take(LABEL_MAX_LENGTH)))
         }
     }
 
     fun onSaveLabel() {
         val dialog = _uiState.value.cardDialog as? CardDialog.EditLabel ?: return
         _uiState.update { it.copy(cardDialog = null) }
-        write { changeBingoCardLabelUseCase(dialog.card.id, dialog.input.trim()) }
+        write { changeBingoCardLabelUseCase(dialog.cardId, dialog.input) }
     }
 
     fun onDismissCardDialog() {
@@ -217,6 +210,9 @@ class HomeViewModel(
     }
 }
 
+/** The label shares one line of the card header with the menu and the flip button. */
+private const val LABEL_MAX_LENGTH = 30
+
 data class HomeUiState(
     val cards: List<BingoCard> = emptyList(),
     val nextCard: NextCardUiState = NextCardUiState(),
@@ -230,6 +226,8 @@ data class HomeUiState(
 ) {
     /** Nothing is drawn until both streams have answered, so the next card never flashes empty. */
     val isLoaded: Boolean get() = cardsLoaded && wishesLoaded
+
+    val dialogCard: BingoCard? get() = cardDialog?.let { dialog -> cards.firstOrNull { it.id == dialog.cardId } }
 }
 
 data class NextCardUiState(
@@ -248,13 +246,10 @@ data class NextCardUiState(
 enum class NextCardReadiness { Filling, Ready, Overflowing }
 
 sealed interface CardDialog {
-    data class CloseConfirm(val card: BingoCard) : CardDialog {
-        /** These are the wishes that return to the next card. */
-        val plannedCount: Int
-            get() = card.slots.count { it.status is SlotStatus.Unmarked && it.wish.status is WishStatus.Planned }
-    }
+    val cardId: BingoCardId
 
-    data class EditLabel(val card: BingoCard, val input: String) : CardDialog
+    data class CloseConfirm(override val cardId: BingoCardId) : CardDialog
+    data class EditLabel(override val cardId: BingoCardId, val input: String) : CardDialog
 }
 
 sealed interface WishPlace {

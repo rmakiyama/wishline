@@ -62,6 +62,28 @@ class SQLDelightBingoCardRepositoryTest {
     }
 
     @Test
+    fun `given a marked slot, when its wish is taken back from done, then the slot is unmarked again`() = runTest {
+        givenAnOpenCard("c1", givenWishes(25))
+        wishRepository.changeStatus(WishId("w0"), WishStatus.Done(at(3)))
+
+        wishRepository.changeStatus(WishId("w0"), WishStatus.Planned(at(4)))
+
+        cardRepository.getOpenCardsStream().first().single()
+            .slots.first().status shouldBe SlotStatus.Unmarked
+    }
+
+    @Test
+    fun `given a marked slot, when its wish moves to someday, then the slot is unmarked again`() = runTest {
+        givenAnOpenCard("c1", givenWishes(25))
+        wishRepository.changeStatus(WishId("w0"), WishStatus.Done(at(3)))
+
+        wishRepository.changeStatus(WishId("w0"), WishStatus.Someday(at(4)))
+
+        cardRepository.getOpenCardsStream().first().single()
+            .slots.first().status shouldBe SlotStatus.Unmarked
+    }
+
+    @Test
     fun `given a wish on an open card, when it is marked done, then the event records that card`() = runTest {
         givenAnOpenCard("c1", givenWishes(25))
 

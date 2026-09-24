@@ -18,9 +18,8 @@ data class BingoCard(
         return BingoLine.All.filter { marked.containsAll(it.positions) }
     }
 
-    /** Whether marking [wishId] would leave no slot unmarked. A someday slot keeps that from happening. */
-    fun isCompletedByMarking(wishId: WishId): Boolean =
-        slots.all { it.status is SlotStatus.Marked || it.wish.id == wishId }
+    /** What a close hands back to the next card. Done and someday wishes stay here. */
+    fun wishesReturningOnClose(): List<Wish> = slots.map { it.wish }.filter { it.status is WishStatus.Planned }
 
     companion object {
         const val SLOT_COUNT: Int = BingoLine.SIZE * BingoLine.SIZE

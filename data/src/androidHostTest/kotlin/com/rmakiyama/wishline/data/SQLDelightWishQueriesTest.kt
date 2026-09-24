@@ -3,8 +3,10 @@ package com.rmakiyama.wishline.data
 import app.cash.turbine.test
 import com.rmakiyama.wishline.domain.BingoCardLayout
 import com.rmakiyama.wishline.domain.Wish
+import com.rmakiyama.wishline.domain.WishStatus
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -68,6 +70,44 @@ class SQLDelightWishQueriesTest {
             awaitItem().map { it.wish.id.value } shouldContainExactly placed.map { it.id.value }
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    @Test
+    fun `given one slot still unmarked, when asking for the fully marked card, then there is none`() = runTest {
+        val placed = givenWishes(25)
+        givenAnOpenCard("c1", placed)
+        placed.drop(1).forEach { wishRepository.changeStatus(it.id, WishStatus.Done(at(3))) }
+
+        queries.fullyMarkedOpenCardId(placed.first().id).shouldBeNull()
+    }
+
+    @Test
+    fun `given every slot marked, when asking for the fully marked card, then it is that card`() = runTest {
+        val placed = givenWishes(25)
+        givenAnOpenCard("c1", placed)
+        placed.forEach { wishRepository.changeStatus(it.id, WishStatus.Done(at(3))) }
+
+        queries.fullyMarkedOpenCardId(placed.first().id) shouldBe cardId("c1")
+    }
+
+    @Test
+    fun `given a someday wish among done ones, when asking for the fully marked card, then there is none`() = runTest {
+        val placed = givenWishes(25)
+        givenAnOpenCard("c1", placed)
+        placed.drop(1).forEach { wishRepository.changeStatus(it.id, WishStatus.Done(at(3))) }
+        wishRepository.changeStatus(placed.first().id, WishStatus.Someday(at(3)))
+
+        queries.fullyMarkedOpenCardId(placed.first().id).shouldBeNull()
+    }
+
+    @Test
+    fun `given a closed card, when asking for the fully marked card, then there is none`() = runTest {
+        val placed = givenWishes(25)
+        givenAnOpenCard("c1", placed)
+        placed.forEach { wishRepository.changeStatus(it.id, WishStatus.Done(at(3))) }
+        cardRepository.close(cardId("c1"), at(4))
+
+        queries.fullyMarkedOpenCardId(placed.first().id).shouldBeNull()
     }
 
     private suspend fun givenWishes(count: Int): List<Wish> =
