@@ -210,7 +210,7 @@ class HomeViewModel(
     }
 }
 
-/** The label shares one line of the card header with the menu and the flip button. */
+/** An upper bound on what is stored: the header ellipsizes, but a label nobody can read is still a label. */
 private const val LABEL_MAX_LENGTH = 30
 
 data class HomeUiState(

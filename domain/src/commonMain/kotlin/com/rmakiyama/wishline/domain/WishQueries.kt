@@ -6,6 +6,6 @@ import kotlinx.coroutines.flow.Flow
 interface WishQueries {
     fun getUnassignedWishesStream(): Flow<List<UnassignedWish>>
 
-    /** The open card holding this wish, once none of its slots is left unmarked. */
+    /** A someday slot is never marked, so a card keeping one is never answered here. */
     suspend fun fullyMarkedOpenCardId(id: WishId): BingoCardId?
 }

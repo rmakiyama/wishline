@@ -8,7 +8,10 @@ import com.rmakiyama.wishline.domain.WishStatus
 import dev.zacsweers.metro.Inject
 import kotlin.time.Clock
 
-/** Marking the last slot of a card closes it: nothing on it is left to decide. */
+/**
+ * Marking the last slot of a card closes it: nothing on it is left to decide. The two are separate
+ * writes, so a card can end up marked all over and still open; closing it by hand then does the rest.
+ */
 interface MarkWishDoneUseCase {
     suspend operator fun invoke(id: WishId)
 }
