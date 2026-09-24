@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rmakiyama.wishline.core.ui.component.BingoCell
 import com.rmakiyama.wishline.core.ui.component.BingoCellState
@@ -118,6 +119,8 @@ private fun CardHeader(
                 text = card.label ?: stringResource(Res.string.home_card_default_label, card.number),
                 style = WlTheme.typography.titleMedium,
                 color = WlTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = stringResource(Res.string.home_card_since, card.createdAt.toDateText()),
