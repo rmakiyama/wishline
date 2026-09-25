@@ -16,6 +16,16 @@ SELECT bingo_slot.bingo_card_id FROM bingo_slot
 JOIN bingo_card ON bingo_card.id = bingo_slot.bingo_card_id
 WHERE bingo_slot.wish_id = ? AND bingo_card.closed_at IS NULL;
 
+selectFullyMarkedOpenCardIdForWish:
+SELECT bingo_slot.bingo_card_id FROM bingo_slot
+JOIN bingo_card ON bingo_card.id = bingo_slot.bingo_card_id
+WHERE bingo_slot.wish_id = ?
+  AND bingo_card.closed_at IS NULL
+  AND NOT EXISTS (
+      SELECT 1 FROM bingo_slot AS sibling
+      WHERE sibling.bingo_card_id = bingo_card.id AND sibling.marked_at IS NULL
+  );
+
 countOpenSlotsForWishes:
 SELECT count(*) FROM bingo_slot
 JOIN bingo_card ON bingo_card.id = bingo_slot.bingo_card_id

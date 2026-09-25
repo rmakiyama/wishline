@@ -10,6 +10,8 @@ import com.rmakiyama.wishline.domain.WishId
 import com.rmakiyama.wishline.domain.WishStatus
 import com.rmakiyama.wishline.core.ui.component.WishAction
 import com.rmakiyama.wishline.usecase.AddWishUseCase
+import com.rmakiyama.wishline.usecase.ChangeBingoCardLabelUseCase
+import com.rmakiyama.wishline.usecase.CloseBingoCardUseCase
 import com.rmakiyama.wishline.usecase.ChangeWishTitleUseCase
 import com.rmakiyama.wishline.usecase.DeleteWishUseCase
 import com.rmakiyama.wishline.usecase.MarkWishDoneUseCase
@@ -69,6 +71,8 @@ class HomeViewModelTest {
     private val markSomeday = mock<MarkWishSomedayUseCase>(MockMode.autoUnit)
     private val restore = mock<RestoreWishUseCase>(MockMode.autoUnit)
     private val delete = mock<DeleteWishUseCase>(MockMode.autoUnit)
+    private val closeCard = mock<CloseBingoCardUseCase>(MockMode.autoUnit)
+    private val changeLabel = mock<ChangeBingoCardLabelUseCase>(MockMode.autoUnit)
 
     @BeforeTest
     fun setUp() {
@@ -419,6 +423,161 @@ class HomeViewModelTest {
         verifySuspend(not) { changeTitle.invoke(any(), any()) }
     }
 
+    @Test
+    fun `given a card, when close is chosen, then the confirmation is about that card`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"), card("c2"))
+        val vm = viewModel()
+
+        vm.onCloseCardClick(BingoCardId("c2"))
+
+        vm.uiState.value.dialogCard?.id shouldBe BingoCardId("c2")
+    }
+
+    @Test
+    fun `given the close confirmation, when it is confirmed, then the card is closed`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"))
+        val vm = viewModel()
+        vm.onCloseCardClick(BingoCardId("c1"))
+
+        vm.onConfirmClose()
+
+        verifySuspend(exactly(1)) { closeCard.invoke(BingoCardId("c1")) }
+    }
+
+    @Test
+    fun `given the close confirmation, when it is confirmed, then the confirmation goes away`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"))
+        val vm = viewModel()
+        vm.onCloseCardClick(BingoCardId("c1"))
+
+        vm.onConfirmClose()
+
+        vm.uiState.value.cardDialog.shouldBeNull()
+    }
+
+    @Test
+    fun `given the close confirmation, when it is dismissed, then the card stays open`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"))
+        val vm = viewModel()
+        vm.onCloseCardClick(BingoCardId("c1"))
+
+        vm.onDismissCardDialog()
+
+        verifySuspend(not) { closeCard.invoke(any()) }
+    }
+
+    @Test
+    fun `given closing fails, when close is confirmed, then the screen keeps working`() = runTest(dispatcher) {
+        everySuspend { closeCard.invoke(any()) } throws IllegalStateException("already closed")
+        openCards.value = listOf(card("c1"))
+        val vm = viewModel()
+        vm.onCloseCardClick(BingoCardId("c1"))
+
+        vm.onConfirmClose()
+
+        vm.uiState.value.cardDialog.shouldBeNull()
+    }
+
+    @Test
+    fun `given a dialog is up, when its card is closed elsewhere, then the dialog goes away`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"))
+        val vm = viewModel()
+        vm.onCloseCardClick(BingoCardId("c1"))
+
+        openCards.value = emptyList()
+
+        vm.uiState.value.cardDialog.shouldBeNull()
+    }
+
+    @Test
+    fun `given a dialog is up, when another card changes, then the dialog stays`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"), card("c2"))
+        val vm = viewModel()
+        vm.onCloseCardClick(BingoCardId("c1"))
+
+        openCards.value = listOf(card("c1"), card("c2").copy(label = "2026 冬"))
+
+        vm.uiState.value.cardDialog shouldBe CardDialog.CloseConfirm(BingoCardId("c1"))
+    }
+
+    @Test
+    fun `given a label is being typed, when the cards are emitted again, then the input survives`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"))
+        val vm = viewModel()
+        vm.onEditLabelClick(BingoCardId("c1"))
+        vm.onLabelInputChange("2026 夏")
+
+        openCards.value = listOf(card("c1"), card("c2"))
+
+        (vm.uiState.value.cardDialog as CardDialog.EditLabel).input shouldBe "2026 夏"
+    }
+
+    @Test
+    fun `given a card with a label, when it is edited, then the current label is offered`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1").copy(label = "2026 夏"))
+        val vm = viewModel()
+
+        vm.onEditLabelClick(BingoCardId("c1"))
+
+        (vm.uiState.value.cardDialog as CardDialog.EditLabel).input shouldBe "2026 夏"
+    }
+
+    @Test
+    fun `given a card without a label, when it is edited, then the input starts empty`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"))
+        val vm = viewModel()
+
+        vm.onEditLabelClick(BingoCardId("c1"))
+
+        (vm.uiState.value.cardDialog as CardDialog.EditLabel).input shouldBe ""
+    }
+
+    @Test
+    fun `given a card, when the label is saved, then the card gets that label`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"))
+        val vm = viewModel()
+        vm.onEditLabelClick(BingoCardId("c1"))
+
+        vm.onLabelInputChange("2026 夏")
+        vm.onSaveLabel()
+
+        verifySuspend(exactly(1)) { changeLabel.invoke(BingoCardId("c1"), "2026 夏") }
+    }
+
+    @Test
+    fun `given the label is cleared, when it is saved, then the card is told to drop it`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1").copy(label = "2026 夏"))
+        val vm = viewModel()
+        vm.onEditLabelClick(BingoCardId("c1"))
+
+        vm.onLabelInputChange("")
+        vm.onSaveLabel()
+
+        verifySuspend(exactly(1)) { changeLabel.invoke(BingoCardId("c1"), "") }
+    }
+
+    @Test
+    fun `given a label longer than the header holds, when it is typed, then the rest is dropped`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"))
+        val vm = viewModel()
+        vm.onEditLabelClick(BingoCardId("c1"))
+
+        vm.onLabelInputChange("あ".repeat(40))
+
+        (vm.uiState.value.cardDialog as CardDialog.EditLabel).input.length shouldBe 30
+    }
+
+    @Test
+    fun `given the close confirmation, when a label is typed, then nothing changes`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"))
+        val vm = viewModel()
+        vm.onCloseCardClick(BingoCardId("c1"))
+
+        vm.onLabelInputChange("2026 夏")
+
+        vm.uiState.value.cardDialog shouldBe CardDialog.CloseConfirm(BingoCardId("c1"))
+    }
+
     private val now = Instant.fromEpochMilliseconds(0)
     private val onCard = WishPlace.Card(BingoCardId("c1"), number = 1)
 
@@ -432,6 +591,8 @@ class HomeViewModelTest {
         markSomeday,
         restore,
         delete,
+        closeCard,
+        changeLabel,
     )
 
     private fun wish(status: WishStatus): Wish = wishes(1).first().copy(status = status)

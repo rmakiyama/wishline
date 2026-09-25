@@ -39,6 +39,27 @@ class BingoCardTest {
         card.completedLines().size shouldBe BingoLine.All.size
     }
 
+    @Test
+    fun `given a card with two planned wishes, when it closes, then both return`() {
+        val card = card(marked = (2 until BingoCard.SLOT_COUNT).toSet())
+
+        card.wishesReturningOnClose().map { it.id } shouldContainExactly listOf(WishId("wish-0"), WishId("wish-1"))
+    }
+
+    @Test
+    fun `given a someday wish, when the card closes, then it stays on the card`() {
+        val card = card(marked = (2 until BingoCard.SLOT_COUNT).toSet(), someday = setOf(1))
+
+        card.wishesReturningOnClose().map { it.id } shouldContainExactly listOf(WishId("wish-0"))
+    }
+
+    @Test
+    fun `given every wish done, when the card closes, then nothing returns`() {
+        val card = card(marked = (0 until BingoCard.SLOT_COUNT).toSet())
+
+        card.wishesReturningOnClose() shouldBe emptyList()
+    }
+
     private fun card(marked: Set<Int>, someday: Set<Int> = emptySet()): BingoCard {
         val at = Instant.fromEpochMilliseconds(0)
         return BingoCard(

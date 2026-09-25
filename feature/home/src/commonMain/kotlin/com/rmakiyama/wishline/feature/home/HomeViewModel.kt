@@ -9,7 +9,9 @@ import com.rmakiyama.wishline.domain.UnassignedWish
 import com.rmakiyama.wishline.domain.Wish
 import com.rmakiyama.wishline.domain.WishStatus
 import com.rmakiyama.wishline.usecase.AddWishUseCase
+import com.rmakiyama.wishline.usecase.ChangeBingoCardLabelUseCase
 import com.rmakiyama.wishline.usecase.ChangeWishTitleUseCase
+import com.rmakiyama.wishline.usecase.CloseBingoCardUseCase
 import com.rmakiyama.wishline.usecase.CreateBingoCardUseCase
 import com.rmakiyama.wishline.usecase.DeleteWishUseCase
 import com.rmakiyama.wishline.usecase.GetOpenBingoCardsStreamUseCase
@@ -40,6 +42,8 @@ class HomeViewModel(
     private val markWishSomedayUseCase: MarkWishSomedayUseCase,
     private val restoreWishUseCase: RestoreWishUseCase,
     private val deleteWishUseCase: DeleteWishUseCase,
+    private val closeBingoCardUseCase: CloseBingoCardUseCase,
+    private val changeBingoCardLabelUseCase: ChangeBingoCardLabelUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -52,7 +56,14 @@ class HomeViewModel(
     private fun observeOpenCards() {
         viewModelScope.launch {
             getOpenBingoCardsStream().collect { cards ->
-                _uiState.update { it.copy(cards = cards, cardsLoaded = true) }
+                _uiState.update { state ->
+                    state.copy(
+                        cards = cards,
+                        // A card can close while its dialog is up, and then there is nothing left to act on.
+                        cardDialog = state.cardDialog?.takeIf { dialog -> cards.any { it.id == dialog.cardId } },
+                        cardsLoaded = true,
+                    )
+                }
             }
         }
     }
@@ -154,6 +165,40 @@ class HomeViewModel(
         }
     }
 
+    fun onCloseCardClick(id: BingoCardId) {
+        _uiState.update { it.copy(cardDialog = CardDialog.CloseConfirm(id)) }
+    }
+
+    fun onConfirmClose() {
+        val dialog = _uiState.value.cardDialog as? CardDialog.CloseConfirm ?: return
+        _uiState.update { it.copy(cardDialog = null) }
+        write { closeBingoCardUseCase(dialog.cardId) }
+    }
+
+    fun onEditLabelClick(id: BingoCardId) {
+        _uiState.update { state ->
+            val label = state.cards.firstOrNull { it.id == id }?.label.orEmpty()
+            state.copy(cardDialog = CardDialog.EditLabel(id, input = label))
+        }
+    }
+
+    fun onLabelInputChange(value: String) {
+        _uiState.update { state ->
+            val dialog = state.cardDialog as? CardDialog.EditLabel ?: return@update state
+            state.copy(cardDialog = dialog.copy(input = value.take(LABEL_MAX_LENGTH)))
+        }
+    }
+
+    fun onSaveLabel() {
+        val dialog = _uiState.value.cardDialog as? CardDialog.EditLabel ?: return
+        _uiState.update { it.copy(cardDialog = null) }
+        write { changeBingoCardLabelUseCase(dialog.cardId, dialog.input) }
+    }
+
+    fun onDismissCardDialog() {
+        _uiState.update { it.copy(cardDialog = null) }
+    }
+
     /**
      * Not rethrown: an uncaught failure here would kill the app, while the wish is still as it was
      * and the streams keep showing it.
@@ -165,6 +210,9 @@ class HomeViewModel(
     }
 }
 
+/** An upper bound on what is stored: the header ellipsizes, but a label nobody can read is still a label. */
+private const val LABEL_MAX_LENGTH = 30
+
 data class HomeUiState(
     val cards: List<BingoCard> = emptyList(),
     val nextCard: NextCardUiState = NextCardUiState(),
@@ -172,11 +220,14 @@ data class HomeUiState(
     val createdCardId: BingoCardId? = null,
     val flippedCardIds: Set<BingoCardId> = emptySet(),
     val sheet: WishSheetState? = null,
+    val cardDialog: CardDialog? = null,
     private val cardsLoaded: Boolean = false,
     private val wishesLoaded: Boolean = false,
 ) {
     /** Nothing is drawn until both streams have answered, so the next card never flashes empty. */
     val isLoaded: Boolean get() = cardsLoaded && wishesLoaded
+
+    val dialogCard: BingoCard? get() = cardDialog?.let { dialog -> cards.firstOrNull { it.id == dialog.cardId } }
 }
 
 data class NextCardUiState(
@@ -193,6 +244,13 @@ data class NextCardUiState(
 }
 
 enum class NextCardReadiness { Filling, Ready, Overflowing }
+
+sealed interface CardDialog {
+    val cardId: BingoCardId
+
+    data class CloseConfirm(override val cardId: BingoCardId) : CardDialog
+    data class EditLabel(override val cardId: BingoCardId, val input: String) : CardDialog
+}
 
 sealed interface WishPlace {
     data class NextCard(val hasBeenOnCard: Boolean) : WishPlace

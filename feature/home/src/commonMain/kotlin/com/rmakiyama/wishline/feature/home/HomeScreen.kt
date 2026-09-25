@@ -52,8 +52,29 @@ fun HomeScreen(
         onCreatedCardShown = viewModel::onCreatedCardShown,
         onFlipCard = viewModel::onFlipCard,
         onWishClick = viewModel::onWishClick,
+        onCloseCardClick = viewModel::onCloseCardClick,
+        onEditLabelClick = viewModel::onEditLabelClick,
         modifier = modifier,
     )
+
+    val dialog = uiState.cardDialog
+    val dialogCard = uiState.dialogCard
+    if (dialog != null && dialogCard != null) {
+        when (dialog) {
+            is CardDialog.CloseConfirm -> CloseCardSheet(
+                returningCount = dialogCard.wishesReturningOnClose().size,
+                onConfirm = viewModel::onConfirmClose,
+                onDismiss = viewModel::onDismissCardDialog,
+            )
+            is CardDialog.EditLabel -> EditLabelDialog(
+                input = dialog.input,
+                cardNumber = dialogCard.number,
+                onInputChange = viewModel::onLabelInputChange,
+                onSave = viewModel::onSaveLabel,
+                onDismiss = viewModel::onDismissCardDialog,
+            )
+        }
+    }
 
     val sheet = uiState.sheet
     if (sheet != null) {
@@ -90,6 +111,8 @@ private fun HomeScreen(
     onCreatedCardShown: () -> Unit,
     onFlipCard: (BingoCardId) -> Unit,
     onWishClick: (Wish, WishPlace) -> Unit,
+    onCloseCardClick: (BingoCardId) -> Unit,
+    onEditLabelClick: (BingoCardId) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -139,6 +162,8 @@ private fun HomeScreen(
                         isFlipped = card.id in uiState.flippedCardIds,
                         onFlip = { onFlipCard(card.id) },
                         onSlotClick = { slot -> onWishClick(slot.wish, WishPlace.Card(card.id, card.number)) },
+                        onCloseClick = { onCloseCardClick(card.id) },
+                        onEditLabelClick = { onEditLabelClick(card.id) },
                     )
                 } else {
                     NextCardPage(

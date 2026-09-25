@@ -15,8 +15,15 @@ class ChangeBingoCardLabelTest {
     private val changeLabel = ChangeBingoCardLabel(bingoCardRepository)
 
     @Test
-    fun `given a label, when it is changed, then it is stored as written`() = runTest {
+    fun `given a label, when it is changed, then the card gets it`() = runTest {
         changeLabel(BingoCardId("c1"), "2026年の夏")
+
+        verifySuspend(exactly(1)) { bingoCardRepository.changeLabel(BingoCardId("c1"), "2026年の夏") }
+    }
+
+    @Test
+    fun `given a label with spaces around it, when it is changed, then it is stored trimmed`() = runTest {
+        changeLabel(BingoCardId("c1"), "  2026年の夏 ")
 
         verifySuspend(exactly(1)) { bingoCardRepository.changeLabel(BingoCardId("c1"), "2026年の夏") }
     }

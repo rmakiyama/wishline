@@ -18,6 +18,9 @@ data class BingoCard(
         return BingoLine.All.filter { marked.containsAll(it.positions) }
     }
 
+    /** What a close hands back to the next card. Done and someday wishes stay here. */
+    fun wishesReturningOnClose(): List<Wish> = slots.map { it.wish }.filter { it.status is WishStatus.Planned }
+
     companion object {
         const val SLOT_COUNT: Int = BingoLine.SIZE * BingoLine.SIZE
     }
