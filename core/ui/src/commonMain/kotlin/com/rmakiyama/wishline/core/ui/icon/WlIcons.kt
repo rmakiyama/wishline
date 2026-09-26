@@ -50,6 +50,11 @@ object WlIcons {
         moveTo(5f, 12f); lineTo(10f, 17f); lineTo(19f, 7f)
     }
 
+    val Close: ImageVector = strokeIcon("Close") {
+        moveTo(6f, 6f); lineTo(18f, 18f)
+        moveTo(18f, 6f); lineTo(6f, 18f)
+    }
+
     val Pencil: ImageVector = strokeIcon("Pencil") {
         moveTo(4f, 20f); horizontalLineTo(8f); lineTo(18f, 10f); lineTo(14f, 6f); lineTo(4f, 16f); verticalLineTo(20f)
         close()

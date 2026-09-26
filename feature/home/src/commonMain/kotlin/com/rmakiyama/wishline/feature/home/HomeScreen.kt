@@ -39,6 +39,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun HomeScreen(
+    onSelectClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = metroViewModel(),
 ) {
@@ -49,6 +50,7 @@ fun HomeScreen(
         onInputChange = viewModel::onInputChange,
         onAddWish = viewModel::onAddWish,
         onCreateCard = viewModel::onCreateCard,
+        onSelectClick = onSelectClick,
         onCreatedCardShown = viewModel::onCreatedCardShown,
         onFlipCard = viewModel::onFlipCard,
         onWishClick = viewModel::onWishClick,
@@ -108,6 +110,7 @@ private fun HomeScreen(
     onInputChange: (String) -> Unit,
     onAddWish: () -> Unit,
     onCreateCard: () -> Unit,
+    onSelectClick: () -> Unit,
     onCreatedCardShown: () -> Unit,
     onFlipCard: (BingoCardId) -> Unit,
     onWishClick: (Wish, WishPlace) -> Unit,
@@ -171,6 +174,7 @@ private fun HomeScreen(
                         onInputChange = onInputChange,
                         onAddWish = onAddWish,
                         onCreateCard = onCreateCard,
+                        onSelectClick = onSelectClick,
                         onWishClick = { onWishClick(it.wish, WishPlace.NextCard(hasBeenOnCard = it.hasBeenOnCard)) },
                     )
                 }

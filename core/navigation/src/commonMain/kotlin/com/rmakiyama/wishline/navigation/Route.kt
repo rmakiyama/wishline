@@ -22,6 +22,9 @@ sealed interface Route : NavKey
 data object HomeRoute : Route
 
 @Serializable
+data object SelectionRoute : Route
+
+@Serializable
 data object PoolRoute : Route
 
 @Serializable
@@ -44,6 +47,7 @@ val NavKeyConfiguration: SavedStateConfiguration = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
             subclass(HomeRoute::class, HomeRoute.serializer())
+            subclass(SelectionRoute::class, SelectionRoute.serializer())
             subclass(PoolRoute::class, PoolRoute.serializer())
             subclass(ArchiveRoute::class, ArchiveRoute.serializer())
             subclass(OnboardingRoute::class, OnboardingRoute.serializer())

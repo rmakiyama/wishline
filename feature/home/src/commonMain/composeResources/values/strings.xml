@@ -24,4 +24,12 @@
     <string name="home_label_title">ラベル</string>
     <string name="home_label_placeholder">空なら %1$s</string>
     <string name="home_save">保存</string>
+    <string name="selection_title">%1$d個を選ぶ</string>
+    <string name="selection_close">閉じる</string>
+    <string name="selection_select_all">すべて選ぶ</string>
+    <string name="selection_clear_all">すべて外す</string>
+    <string name="selection_total">/ %1$d</string>
+    <string name="selection_remaining">あと %1$d個</string>
+    <string name="selection_over">%1$d個多い</string>
+    <string name="selection_create">つくる</string>
 </resources>
