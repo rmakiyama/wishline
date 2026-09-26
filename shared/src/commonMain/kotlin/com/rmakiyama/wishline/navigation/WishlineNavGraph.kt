@@ -20,6 +20,7 @@ import com.rmakiyama.wishline.core.ui.component.WlBottomBar
 import com.rmakiyama.wishline.designsystem.theme.WlTheme
 import com.rmakiyama.wishline.feature.archive.navigation.archiveEntry
 import com.rmakiyama.wishline.feature.home.navigation.homeEntry
+import com.rmakiyama.wishline.feature.home.navigation.selectionEntry
 import com.rmakiyama.wishline.feature.onboarding.navigation.onboardingEntry
 import com.rmakiyama.wishline.feature.pool.navigation.poolEntry
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -72,7 +73,19 @@ private fun WishlineNavGraph(startRoute: Route) {
                         backStack.add(HomeRoute)
                     },
                 )
-                homeEntry()
+                // Guarded both ways: a tap during the transition would otherwise push a second
+                // selection, or pop HOME and leave nothing to show.
+                homeEntry(
+                    onSelectClick = {
+                        if (backStack.lastOrNull() != SelectionRoute) backStack.add(SelectionRoute)
+                    },
+                )
+                // HOME stays below, so leaving lands on it; a new card scrolls into view there.
+                selectionEntry(
+                    onFinished = {
+                        if (backStack.lastOrNull() == SelectionRoute) backStack.removeLastOrNull()
+                    },
+                )
                 poolEntry()
                 archiveEntry()
             },

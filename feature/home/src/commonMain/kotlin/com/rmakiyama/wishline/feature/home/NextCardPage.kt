@@ -38,11 +38,12 @@ internal fun NextCardPage(
     onInputChange: (String) -> Unit,
     onAddWish: () -> Unit,
     onCreateCard: () -> Unit,
+    onSelectClick: () -> Unit,
     onWishClick: (UnassignedWish) -> Unit,
 ) {
     val spacing = WlTheme.spacing
     CardFrame {
-        Header(uiState = uiState, onCreateCard = onCreateCard)
+        Header(uiState = uiState, onCreateCard = onCreateCard, onSelectClick = onSelectClick)
         // Newest at the bottom, right above the input, and the list hugs the input when short.
         val listState = rememberLazyListState()
         // Keys pin the scroll position to an item, so a new wish would slide in out of view.
@@ -95,6 +96,7 @@ internal fun NextCardPage(
 private fun Header(
     uiState: NextCardUiState,
     onCreateCard: () -> Unit,
+    onSelectClick: () -> Unit,
 ) {
     val count = uiState.wishes.size
     Row(
@@ -134,8 +136,7 @@ private fun Header(
             NextCardReadiness.Ready -> Button(onClick = onCreateCard, enabled = !uiState.isCreating) {
                 Text(stringResource(Res.string.home_next_card_create))
             }
-            // TODO: 選抜画面ができたら有効にして、そこへ遷移する
-            NextCardReadiness.Overflowing -> Button(onClick = {}, enabled = false) {
+            NextCardReadiness.Overflowing -> Button(onClick = onSelectClick) {
                 Text(stringResource(Res.string.home_next_card_select))
             }
         }
