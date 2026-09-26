@@ -174,13 +174,63 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `given 25 wishes, when a card is created, then the screen is told which card to show`() = runTest(dispatcher) {
+    fun `given the cards have been emitted, when a new card appears, then the screen is told to show it`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"))
+        val vm = viewModel()
+
+        openCards.value = listOf(card("c1"), card("c2"))
+
+        vm.uiState.value.createdCardId shouldBe BingoCardId("c2")
+    }
+
+    @Test
+    fun `given one card, when it closes as another is created, then the screen is told to show the new one`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"))
+        val vm = viewModel()
+
+        openCards.value = listOf(card("c2"))
+
+        vm.uiState.value.createdCardId shouldBe BingoCardId("c2")
+    }
+
+    @Test
+    fun `given a created card has been shown, when it changes, then it is not asked to show it again`() = runTest(dispatcher) {
+        val vm = viewModel()
+        openCards.value = listOf(card("c1"))
+        vm.onCreatedCardShown()
+
+        openCards.value = listOf(card("c1").copy(label = "2026 夏"))
+
+        vm.uiState.value.createdCardId.shouldBeNull()
+    }
+
+    @Test
+    fun `given 25 wishes, when a card is created, then the screen waits for the card to appear`() = runTest(dispatcher) {
         unassigned.value = unassigned(25)
         val vm = viewModel()
 
         vm.onCreateCard()
 
-        vm.uiState.value.createdCardId shouldBe BingoCardId("card-1")
+        vm.uiState.value.createdCardId.shouldBeNull()
+    }
+
+    @Test
+    fun `given cards on the first emission, then none of them is to be shown as new`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"))
+        val vm = viewModel()
+
+        vm.uiState.value.createdCardId.shouldBeNull()
+    }
+
+    @Test
+    fun `given a new card is waiting to be shown, when another card closes, then it is still to be shown`() = runTest(dispatcher) {
+        openCards.value = listOf(card("c1"))
+        val vm = viewModel()
+        openCards.value = listOf(card("c1"), card("c2"))
+
+        openCards.value = listOf(card("c2"))
+
+        vm.uiState.value.createdCardId shouldBe BingoCardId("c2")
     }
 
     @Test
@@ -217,9 +267,8 @@ class HomeViewModelTest {
 
     @Test
     fun `given a created card, when the screen has shown it, then it is not asked to show it again`() = runTest(dispatcher) {
-        unassigned.value = unassigned(25)
         val vm = viewModel()
-        vm.onCreateCard()
+        openCards.value = listOf(card("c1"))
 
         vm.onCreatedCardShown()
 

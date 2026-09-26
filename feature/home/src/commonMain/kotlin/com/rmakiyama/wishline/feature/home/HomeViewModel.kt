@@ -55,10 +55,15 @@ class HomeViewModel(
 
     private fun observeOpenCards() {
         viewModelScope.launch {
+            // Null until the first answer, so the cards already there on arrival do not count as new.
+            var knownIds: Set<BingoCardId>? = null
             getOpenBingoCardsStream().collect { cards ->
+                val created = knownIds?.let { known -> cards.firstOrNull { it.id !in known } }
+                knownIds = cards.mapTo(mutableSetOf()) { it.id }
                 _uiState.update { state ->
                     state.copy(
                         cards = cards,
+                        createdCardId = created?.id ?: state.createdCardId,
                         // A card can close while its dialog is up, and then there is nothing left to act on.
                         cardDialog = state.cardDialog?.takeIf { dialog -> cards.any { it.id == dialog.cardId } },
                         cardsLoaded = true,
@@ -97,8 +102,7 @@ class HomeViewModel(
         _uiState.update { it.copy(nextCard = it.nextCard.copy(isCreating = true)) }
         viewModelScope.launch {
             try {
-                val id = createBingoCardUseCase(nextCard.wishes.map { it.wish })
-                _uiState.update { it.copy(createdCardId = id) }
+                createBingoCardUseCase(nextCard.wishes.map { it.wish })
             } catch (e: Exception) {
                 // The next card stays as it was, so the user can simply try again.
             } finally {
@@ -216,7 +220,10 @@ private const val LABEL_MAX_LENGTH = 30
 data class HomeUiState(
     val cards: List<BingoCard> = emptyList(),
     val nextCard: NextCardUiState = NextCardUiState(),
-    /** Set once after a card is created, so the screen can move to it. */
+    /**
+     * Set when a card appears in the stream, so the screen can move to it. A card only appears by
+     * being created, whether here or on the selection screen.
+     */
     val createdCardId: BingoCardId? = null,
     val flippedCardIds: Set<BingoCardId> = emptySet(),
     val sheet: WishSheetState? = null,
